@@ -41,7 +41,7 @@ jobs:
           PARENT_NODE_ID="${{ github.event.issue.node_id }}"
 
           PROJECT_NUMBER="1" 
-          OWNER="front-studium"
+          OWNER="${{ github.repository_owner }}"
 
           sed -n '/---/{:a;n;/---/!ba;n;:b;p;n;bb}' "$T_PATH" > base_body.md
 
