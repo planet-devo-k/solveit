@@ -8,6 +8,12 @@ function solution(s) {
 }
 
 // 다른 풀이
-function solution(s){
-    return s.toUpperCase().split("P").length === s.toUpperCase().split("Y").length;
+function solution(s) {
+    const upperS = s.toUpperCase();
+    // 각각의 개수를 변수에 담아 비교하면 가독성이 훨씬 좋아짐!
+    const pCount = upperS.split("P").length - 1;
+    const yCount = upperS.split("Y").length - 1;
+    // 만일 p가 2개면 
+    
+    return pCount === yCount;
 }
