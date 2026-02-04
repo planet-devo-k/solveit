@@ -1,0 +1,24 @@
+name: PR Reminder
+
+on:
+  schedule:
+    - cron: "0 0 * * 5" # 매주 금요일 9:00 (UTC 기준으로 금 00:00)
+  workflow_dispatch:
+
+jobs:
+  send_message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check environment variables
+        run: |
+          echo "DISCORD_CHANNEL_ID_PR=${{ secrets.DISCORD_CHANNEL_ID_PR}}"
+          echo "REMINDER_BOT_TOKEN=${{ secrets.REMINDER_BOT_TOKEN }}"
+
+      - name: Notify PR Due Date
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bot ${{ secrets.REMINDER_BOT_TOKEN }}" \
+          -d "{\"content\": \"잊지 말고 PR올리고 Approve 하자~!\"}" \
+          https://discord.com/api/v10/channels/${{ secrets.DISCORD_CHANNEL_ID_PR }}/messages)
+          echo "Response: $RESPONSE"

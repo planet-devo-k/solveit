@@ -1,34 +1,38 @@
 ---
 name: "goal-tracking"
 about: "Use this template for using issues as goal tracking items."
-title: "`Week ~ Week ` Goal"
-labels: "goal"
-assignees: ""
+title: "`Week ~ Week` Programmers level0 / level1"
+labels:
+  - goal
+  - Programmers
+  - level 0
+  - level 1
+assignees: "sgoldenbird"
 ---
 
 ## Goal
 
-**Week**: 8주(기초 프로젝트 기간 3주 제외)
+**Week**: 10weeks (2026. ~ 2026. )
 
-**Goal Description**: 매주 프로그래머스 레벨 0 2 문제씩 풀기
+**Goal Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1 every week.
 
-**Deadline**: 2025.05.17 SAT
+**Deadline**: 2026.0. SUN
 
 ---
 
 ## Problems List
 
-**week1** 2025.04.02-2025.04.8
+**week0** 2026. MON - 2026. SUN
 
-- Problem 1
-- Problem 2
-
-**week2** 2025.04.09-2025.04.15
-
-- Problem 3
-- Problem 4
-
----
+**week1** 2026. MON - 2026. SUN
+**week2** 2026. MON - 2026. SUN
+**week3** 2026. MON - 2026. SUN
+**week4** 2026. MON - 2026. SUN
+**week5** 2026. MON - 2026. SUN
+**week6** 2026. MON - 2026. SUN
+**week7** 2026. MON - 2026. SUN
+**week8** 2026. MON - 2026. SUN
+**week9** 2026. MON - 2026. SUN
 
 ## Progress
 
@@ -36,54 +40,62 @@ assignees: ""
 
 - **시은**:
 
+  - [ ] Complete `Week 0`
   - [ ] Complete `Week 1`
   - [ ] Complete `Week 2`
-  - [x] ~~Complete `Week 3`~~
-  - [x] ~~Complete `Week 4`~~
-  - [x] ~~Complete `Week 5`~~
+  - [ ] Complete `Week 3`
+  - [ ] Complete `Week 4`
+  - [ ] Complete `Week 5`
   - [ ] Complete `Week 6`
   - [ ] Complete `Week 7`
   - [ ] Complete `Week 8`
+  - [ ] Complete `Week 9`
 
 - **수진**:
 
+  - [ ] Complete `Week 0`
   - [ ] Complete `Week 1`
   - [ ] Complete `Week 2`
-  - [x] ~~Complete `Week 3`~~
-  - [x] ~~Complete `Week 4`~~
-  - [x] ~~Complete `Week 5`~~
+  - [ ] Complete `Week 3`
+  - [ ] Complete `Week 4`
+  - [ ] Complete `Week 5`
   - [ ] Complete `Week 6`
   - [ ] Complete `Week 7`
   - [ ] Complete `Week 8`
+  - [ ] Complete `Week 9`
 
 - **유진**:
 
+  - [ ] Complete `Week 0`
   - [ ] Complete `Week 1`
   - [ ] Complete `Week 2`
-  - [x] ~~Complete `Week 3`~~
-  - [x] ~~Complete `Week 4`~~
-  - [x] ~~Complete `Week 5`~~
+  - [ ] Complete `Week 3`
+  - [ ] Complete `Week 4`
+  - [ ] Complete `Week 5`
   - [ ] Complete `Week 6`
   - [ ] Complete `Week 7`
   - [ ] Complete `Week 8`
+  - [ ] Complete `Week 9`
 
 - **인성**:
 
+  - [ ] Complete `Week 0`
   - [ ] Complete `Week 1`
   - [ ] Complete `Week 2`
-  - [x] ~~Complete `Week 3`~~
-  - [x] ~~Complete `Week 4`~~
-  - [x] ~~Complete `Week 5`~~
+  - [ ] Complete `Week 3`
+  - [ ] Complete `Week 4`
+  - [ ] Complete `Week 5`
   - [ ] Complete `Week 6`
   - [ ] Complete `Week 7`
   - [ ] Complete `Week 8`
+  - [ ] Complete `Week 9`
 
 ---
 
 ## Checklist
 
-- [ ] 모든 참여자가 모든 주차별 문제를 완료했습니다.
-- [ ] 관련 이슈들을 모두 해결했습니다.
-- [ ] 각 참여자의 PR이 해당 Week에 연결되어 있습니다.
-- [ ] 참여자별 This Week's To-Do List가 주차별로 갱신되었습니다.
-- [ ] 마일스톤이 이 목표와 연동되어 있습니다.
+- [ ] All participants have completed all weekly problems.
+- [ ] All related issues have been resolved.
+- [ ] Each participant’s PR is linked to the corresponding week.
+- [ ] Each participant’s “This Week’s To-Do List” has been updated weekly.
+- [ ] The milestone is linked to this goal.

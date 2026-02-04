@@ -1,0 +1,90 @@
+name: Create Weekly Goal Track Issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create_weeks:
+    if: |
+      contains(github.event.issue.title, 'Week') && contains(github.event.issue.title, '~') &&
+      (
+        (github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'epic')) 
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      repository-projects: write
+
+    env:
+      RAW_TITLE: ${{ github.event.issue.title }}
+      RAW_BODY: ${{ github.event.issue.body }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create 10 Weekly Goal Track Issues
+        shell: bash
+        run: |
+          # 1. 템플릿 및 데이터 추출
+          T_PATH=".github/ISSUE_TEMPLATE/goal_track_week.md"
+          if [ ! -f "$T_PATH" ]; then echo "❌ 템플릿 파일이 없습니다."; exit 1; fi
+
+          T_TITLE=$(grep "title:" "$T_PATH" | cut -d'"' -f2 | tr -d '`' | xargs)
+          T_LABELS=$(sed -n '/labels:/,/assignees:/p' "$T_PATH" | grep "-" | sed 's/- //g' | tr -d ' ' | tr '\n' ',' | sed 's/,$//' | xargs)
+          T_ASSIGNEE=$(grep "assignees:" "$T_PATH" | cut -d'"' -f2 | xargs)
+
+          START_NUM=$(echo "$RAW_TITLE" | grep -oE '[0-9]+' | head -1)
+          START_DATE=$(echo "$RAW_BODY" | grep -oE '[0-9]{4}[.-][0-9]{2}[.-][0-9]{2}' | head -1 | tr '.' '-')
+          PARENT_NODE_ID="${{ github.event.issue.node_id }}"
+
+          PROJECT_NUMBER="1" 
+          OWNER="${{ github.repository_owner }}"
+
+          sed -n '/---/{:a;n;/---/!ba;n;:b;p;n;bb}' "$T_PATH" > base_body.md
+
+          # 2. 10주치 반복 생성 (Week START_NUM ~ START_NUM + 9)
+          for ((i=0; i<10; i++))
+          do
+            CURRENT_WEEK=$((START_NUM + i))
+            WEEK_START=$(date -d "$START_DATE + $((i * 7)) days" +"%Y.%m.%d")
+            WEEK_END=$(date -d "$START_DATE + $((i * 7 + 6)) days" +"%Y.%m.%d")
+
+            export WEEK_RANGE="${WEEK_START} MON ~ ${WEEK_END} SUN"
+            export DEADLINE="${WEEK_END} SUN"
+            
+            # 본문에서 해당 주차 문제 리스트 추출
+            RAW_PROBLEMS=$(echo "$RAW_BODY" | sed -n "/week${CURRENT_WEEK}/,/^$/p" | grep "^-" | sed 's/- /  - [ ] Solve /g')
+            export PROBLEMS="${RAW_PROBLEMS:-  - [ ] 문제를 찾지 못했습니다.}"
+
+            # Node.js로 템플릿 변수 치환
+            node -e "
+              const fs = require('fs');
+              let content = fs.readFileSync('base_body.md', 'utf8');
+              content = content.replace(/2026\. MON ~ 2026\. SUN/g, process.env.WEEK_RANGE);
+              content = content.replace(/2026\. SUN/g, process.env.DEADLINE);
+              const pattern = /- \[ \] Solve \`Problem 1\`\s+- \[ \] Solve \`Problem 2\`\s+- \[ \] Solve/g;
+              content = content.replace(pattern, process.env.PROBLEMS);
+              fs.writeFileSync('final_body.md', content);
+            "
+
+            # 3. 이슈 생성
+            FINAL_TITLE="${T_TITLE}${CURRENT_WEEK}"
+            echo "🚀 생성 중: $FINAL_TITLE"
+            CHILD_URL=$(gh issue create --title "$FINAL_TITLE" --body-file final_body.md --label "$T_LABELS" --assignee "$T_ASSIGNEE")
+            sleep 1
+            
+            # 4. 부모 이슈와 하위 이슈로 연결
+            CHILD_ID=$(gh issue view "$CHILD_URL" --json id -q '.id')
+            gh api graphql -f query='mutation($parentId: ID!, $subIssueId: ID!) { addSubIssue(input: {issueId: $parentId, subIssueId: $subIssueId}) { issue { id } } }' \
+              -f parentId="$PARENT_NODE_ID" -f subIssueId="$CHILD_ID" || echo "⚠️ Sub-issue link failed"
+
+            # 5. 프로젝트 보드 #1에 이슈 추가
+            echo "⏳ 프로젝트 #$PROJECT_NUMBER 에 이슈 추가 중..."
+            gh project item-add "$PROJECT_NUMBER" --owner "$OWNER" --url "$CHILD_URL" > /dev/null
+            
+            echo "✅ 생성 및 프로젝트 추가 완료: Week$CURRENT_WEEK"
+            echo "--------------------------------------"
+          done

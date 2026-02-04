@@ -1,0 +1,21 @@
+name: Notify Discord on New Discussion
+
+on:
+  discussion:
+    types: [created]
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discussion info to Discord
+        run: |
+          MESSAGE="**새 Discussion이 시작됐습니다**\n\n💬 **제목**: ${{ github.event.discussion.title }}\n🙋‍♀️ **작성자**: ${{ github.event.discussion.user.login }}\n🔗 [바로가기](${{ github.event.discussion.html_url }})"
+
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bot ${{ secrets.REMINDER_BOT_TOKEN }}" \
+            -d "{\"content\": \"$MESSAGE\"}" \
+            https://discord.com/api/v10/channels/${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}/messages)
+
+          echo "Discord Response Code: $RESPONSE"
