@@ -6,7 +6,7 @@ function solution(arr, divisor) {
       answer.push(i);
     }
   }
-  console.log(answer.length);
+
   if (answer.length != 0) {
     answer.sort((a, b) => a - b);
   } else answer.push(-1);
