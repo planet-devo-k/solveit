@@ -1,10 +1,10 @@
 function solution(myString) {
   var answer = "";
-  for (let a of myString) {
-    if (a.charCodeAt(0) < "l".charCodeAt(0)) {
+  for (let char of myString) {
+    if (char.charCodeAt(0) < "l".charCodeAt(0)) {
       answer += "l";
     } else {
-      answer += a;
+      answer += char;
     }
   }
   return answer;
