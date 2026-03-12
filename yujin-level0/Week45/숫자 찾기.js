@@ -4,5 +4,6 @@ function solution(num, k) {
 
 // 다른 풀이
 // function solution(num, k) {
-//     return ("❤" + num).indexOf(k);
+//   const index = num.toString().indexOf(String(k));
+//   return index === -1 ? -1 : index + 1;
 // }
