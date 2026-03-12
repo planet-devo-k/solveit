@@ -1,6 +1,6 @@
-<p align="center">
+<!-- <p align="center">
   <img src="./assets/solveit_banner.jpg" alt="solveit banner" width="800" />
-</p>
+</p> -->
 
 <h1 align="center">SOLVEIT</h1>
 
