@@ -1,0 +1,32 @@
+name: Create Goal Track Week
+
+on:
+  issues:
+    types: [opened, labeled]
+  workflow_dispatch:
+
+jobs:
+  create_weeks:
+    if: |
+      contains(github.event.issue.title, 'Week') && 
+      contains(github.event.issue.title, '~') &&
+      contains(github.event.issue.labels.*.name, 'epic')
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      repository-projects: write
+
+    env:
+      TITLE: ${{ github.event.issue.title }}
+      BODY: ${{ github.event.issue.body }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PARENT_NODE_ID: ${{ github.event.issue.node_id }}
+      OWNER: ${{ github.repository_owner }}
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: run JS script
+        run: node .github/scripts/create_goal_track_week.js

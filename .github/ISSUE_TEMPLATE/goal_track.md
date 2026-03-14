@@ -2,12 +2,13 @@
 name: "goal-tracking"
 about: "Use this template for using issues as goal tracking items."
 title: "`Week ~ Week` Programmers level0 / level1"
+assignees: "sgoldenbird"
 labels:
   - goal
-  - Programmers
-  - level 0
-  - level 1
-assignees: "sgoldenbird"
+  - programmers
+  - epic
+  - level0
+  - level1
 ---
 
 ## Goal
@@ -20,7 +21,7 @@ assignees: "sgoldenbird"
 
 ---
 
-## Problems List
+## This Session Challenges
 
 **week0** 2026. MON - 2026. SUN
 

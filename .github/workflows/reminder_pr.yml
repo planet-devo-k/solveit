@@ -25,8 +25,8 @@ jobs:
           -d '{
             "embeds": [
               {
-                "title": "PR 리마인더",
-                "description": "잊지 말고 PR 생성하고 코드 리뷰 하자~!",
+                "title": "PR REMINDER",
+                "description": "잊지 말고 PR 생성하고 코드 리뷰 하자!",
                 "color": 16374876,
                 "fields": [
                   {

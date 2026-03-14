@@ -2,12 +2,12 @@
 name: "weekly-goal-tracking"
 about: "Use this template for using issues as weekly goal tracking items."
 title: "`Week`"
+assignees: "sgoldenbird"
 labels:
   - goal
   - Programmers
-  - level 0
-  - level 1
-assignees: "sgoldenbird"
+  - level0
+  - level1
 ---
 
 ## Goal
@@ -20,12 +20,21 @@ assignees: "sgoldenbird"
 
 ---
 
-## Progress
+## This Week Challenges
+
+- Solve
+- Solve
+- Solve
+
+---
+
+## Status
 
 - [ ] 시은
 - [ ] 수진
 - [ ] 유진
 - [ ] 인성
+- [ ] 혜란
 
 ---
 

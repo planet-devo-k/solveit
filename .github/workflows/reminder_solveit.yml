@@ -26,7 +26,7 @@ jobs:
             "embeds": [
               {
                 "title": "오늘 스터디 있는 날",
-                "description": "함께 배우며 성장하는 시간! 이따 만나요~!",
+                "description": "함께 배우며 성장하는 시간, 이따 만나요!",
                 "color": 16374876,
                 "fields": [
                   {

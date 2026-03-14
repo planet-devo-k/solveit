@@ -23,13 +23,13 @@ jobs:
             -d '{
               "embeds": [
                 {
-                  "title": "새 Discussion이 생성되었습니다",
-                  "description": "새로운 의견이나 질문이 올라왔어요. 함께 확인해봐요",
+                  "title": "NEW Discussion",
+                  "description": "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
                   "color": 5815039,
                   "fields": [
                     {
                       "name": "제목",
-                      "value": "`'"${TITLE}"'`",
+                      "value": "'"${TITLE}"'",
                       "inline": false
                     },
                     {
