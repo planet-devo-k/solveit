@@ -12,9 +12,9 @@ assignees: "sgoldenbird"
 
 ## Goal
 
-**Week**: 10weeks (2026. ~ 2026. )
+**Week**: 10 weeks (2026. ~ 2026. )
 
-**Goal Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1 every week.
+**Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1 every week.
 
 **Deadline**: 2026.0. SUN
 
@@ -34,12 +34,10 @@ assignees: "sgoldenbird"
 **week8** 2026. MON - 2026. SUN
 **week9** 2026. MON - 2026. SUN
 
+<!--
 ## Progress
 
-### Week-by-Week Completion by Participant
-
-- **시은**:
-
+- **Member**:
   - [ ] Complete `Week 0`
   - [ ] Complete `Week 1`
   - [ ] Complete `Week 2`
@@ -50,52 +48,13 @@ assignees: "sgoldenbird"
   - [ ] Complete `Week 7`
   - [ ] Complete `Week 8`
   - [ ] Complete `Week 9`
-
-- **수진**:
-
-  - [ ] Complete `Week 0`
-  - [ ] Complete `Week 1`
-  - [ ] Complete `Week 2`
-  - [ ] Complete `Week 3`
-  - [ ] Complete `Week 4`
-  - [ ] Complete `Week 5`
-  - [ ] Complete `Week 6`
-  - [ ] Complete `Week 7`
-  - [ ] Complete `Week 8`
-  - [ ] Complete `Week 9`
-
-- **유진**:
-
-  - [ ] Complete `Week 0`
-  - [ ] Complete `Week 1`
-  - [ ] Complete `Week 2`
-  - [ ] Complete `Week 3`
-  - [ ] Complete `Week 4`
-  - [ ] Complete `Week 5`
-  - [ ] Complete `Week 6`
-  - [ ] Complete `Week 7`
-  - [ ] Complete `Week 8`
-  - [ ] Complete `Week 9`
-
-- **인성**:
-
-  - [ ] Complete `Week 0`
-  - [ ] Complete `Week 1`
-  - [ ] Complete `Week 2`
-  - [ ] Complete `Week 3`
-  - [ ] Complete `Week 4`
-  - [ ] Complete `Week 5`
-  - [ ] Complete `Week 6`
-  - [ ] Complete `Week 7`
-  - [ ] Complete `Week 8`
-  - [ ] Complete `Week 9`
+  -->
 
 ---
 
 ## Checklist
 
-- [ ] All participants have completed all weekly problems.
+- [ ] All members have completed all weekly problems.
 - [ ] All related issues have been resolved.
-- [ ] Each participant’s PR is linked to the corresponding week.
-- [ ] Each participant’s “This Week’s To-Do List” has been updated weekly.
+- [ ] Each member’s PR is linked to the corresponding week.
 - [ ] The milestone is linked to this goal.

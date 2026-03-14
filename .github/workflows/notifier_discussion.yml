@@ -1,4 +1,4 @@
-name: Notify Discord on New Discussion
+name: Notifier Discussion
 
 on:
   discussion:
@@ -8,9 +8,9 @@ jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Discussion info to Discord
+      - name: notify discord on discussion created
         run: |
-          MESSAGE="**새 Discussion이 시작됐습니다**\n\n💬 **제목**: ${{ github.event.discussion.title }}\n🙋‍♀️ **작성자**: ${{ github.event.discussion.user.login }}\n🔗 [바로가기](${{ github.event.discussion.html_url }})"
+          MESSAGE="**새 Discussion이 생성됐습니다**\n\n **제목**: ${{ github.event.discussion.title }}\n**작성자**: ${{ github.event.discussion.user.login }}\n[바로가기](${{ github.event.discussion.html_url }})"
 
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \

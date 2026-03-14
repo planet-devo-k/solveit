@@ -1,4 +1,4 @@
-name: Solveit Reminder
+name: Reminder Solveit
 
 on:
   schedule:
@@ -11,10 +11,10 @@ jobs:
     steps:
       - name: Check environment variables
         run: |
-          echo "DISCORD_CHANNEL_ID_SOLVEIT=${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}"
+          echo "DISCORD_CHANNEL_ID=${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}"
           echo "REMINDER_BOT_TOKEN=${{ secrets.REMINDER_BOT_TOKEN }}"
 
-      - name: Notify PR Due Date
+      - name: send solveit reminder to discord
         run: |
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
           -H "Content-Type: application/json" \

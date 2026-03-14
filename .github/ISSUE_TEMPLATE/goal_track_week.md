@@ -14,7 +14,7 @@ assignees: "sgoldenbird"
 
 **Week**: 2026. MON ~ 2026. SUN
 
-**Goal Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1.
+**Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1.
 
 **Deadline**: 2026. SUN
 
@@ -22,39 +22,17 @@ assignees: "sgoldenbird"
 
 ## Progress
 
-### This Week's To-Do List by Participant
-
-- **시은**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **수진**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **유진**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **인성**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
+- [ ] 시은
+- [ ] 수진
+- [ ] 유진
+- [ ] 인성
 
 ---
 
 ## Checklist
 
-- [ ] All participants have solved all problems.
-- [ ] Each participant’s “This Week’s To-Do List” has been updated.
+- [ ] All members have solved all problems.
 - [ ] All related issues have been resolved.
 - [ ] PRs have been created for all problems.
 - [ ] All PRs have been reviewed.
-- [ ] Any related issues or questions have been shared in Discussions (if applicable).
+- [ ] Any related issues or questions have been shared in Discussions (if any).

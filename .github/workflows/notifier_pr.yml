@@ -1,4 +1,4 @@
-name: Notify Discord on PR Created
+name: Notifier PR
 
 on:
   pull_request:
@@ -8,15 +8,15 @@ jobs:
   notify-discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Send PR info to Discord
+      - name: notify discord on PR created
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_USER: ${{ github.event.pull_request.user.login }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_CHANNEL_ID_PR }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_PR }}
           BOT_TOKEN: ${{ secrets.REMINDER_BOT_TOKEN }}
         run: |
-          MESSAGE="**새 PR이 생성됐습니다**\n\n📌 **제목**: \`${PR_TITLE}\`\n🙋‍♀️ **작성자**: ${PR_USER}\n🔗 [PR 바로가기](${PR_URL})"
+          MESSAGE="**새 PR이 생성됐습니다**\n\n**제목**: \`${PR_TITLE}\`\n **작성자**: ${PR_USER}\n [바로가기](${PR_URL})"
 
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \

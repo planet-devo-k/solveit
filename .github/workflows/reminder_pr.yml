@@ -1,4 +1,4 @@
-name: PR Reminder
+name: Reminder PR
 
 on:
   schedule:
@@ -9,12 +9,12 @@ jobs:
   send_message:
     runs-on: ubuntu-latest
     steps:
-      - name: Check environment variables
+      - name: check environment variables
         run: |
-          echo "DISCORD_CHANNEL_ID_PR=${{ secrets.DISCORD_CHANNEL_ID_PR}}"
+          echo "DISCORD_CHANNEL_ID=${{ secrets.DISCORD_CHANNEL_ID_PR}}"
           echo "REMINDER_BOT_TOKEN=${{ secrets.REMINDER_BOT_TOKEN }}"
 
-      - name: Notify PR Due Date
+      - name: send pr reminder to discord
         run: |
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
           -H "Content-Type: application/json" \
