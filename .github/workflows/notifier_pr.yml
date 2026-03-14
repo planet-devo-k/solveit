@@ -3,25 +3,49 @@ name: Notifier PR
 on:
   pull_request:
     types: [opened]
+  workflow_dispatch:
 
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
+    env:
+      TITLE: ${{github.event.pull_request.title || 'PR Title' }}
+      USER: ${{github.event.pull_request.user.login || 'User' }}
+      URL: ${{github.event.pull_request.html_url || 'https://github.com/planet-devo-k/solveit/pulls' }}
+      DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_PR}}
+      BOT_TOKEN: ${{secrets.REMINDER_BOT_TOKEN}}
     steps:
       - name: notify discord on PR created
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_USER: ${{ github.event.pull_request.user.login }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_PR }}
-          BOT_TOKEN: ${{ secrets.REMINDER_BOT_TOKEN }}
         run: |
-          MESSAGE="**새 PR이 생성됐습니다**\n\n**제목**: \`${PR_TITLE}\`\n **작성자**: ${PR_USER}\n [바로가기](${PR_URL})"
-
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -H "Authorization: Bot ${BOT_TOKEN}" \
-            -d "{\"content\": \"$MESSAGE\"}" \
-            https://discord.com/api/v10/channels/${DISCORD_WEBHOOK}/messages)
+            -d '{
+              "embeds": [
+                {
+                  "title": "새 PR이 생성되었습니다",
+                  "description": "새로운 코드 리뷰가 기다리고 있어요",
+                  "color": 5815039,
+                  "fields": [
+                    {
+                      "name": "제목",
+                      "value": "`'"${TITLE}"'`",
+                      "inline": false
+                    },
+                    {
+                      "name": "작성자",
+                      "value": "'"${USER}"'",
+                      "inline": true
+                    },
+                    {
+                      "name": "링크",
+                      "value": "[바로가기]('"${URL}"')",
+                      "inline": true
+                    }
+                  ]
+                }
+              ]
+            }' \
+            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages")
 
           echo "Discord Response Code: $RESPONSE"

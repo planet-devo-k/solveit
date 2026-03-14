@@ -8,17 +8,20 @@ on:
 jobs:
   send_message:
     runs-on: ubuntu-latest
+    env:
+      DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_PR}}
+      REMINDER_BOT_TOKEN: ${{secrets.REMINDER_BOT_TOKEN}}
     steps:
       - name: check environment variables
         run: |
-          echo "DISCORD_CHANNEL_ID=${{secrets.DISCORD_CHANNEL_ID_PR}}"
-          echo "REMINDER_BOT_TOKEN=${{secrets.REMINDER_BOT_TOKEN}}"
+          echo "DISCORD_CHANNEL_ID=${DISCORD_CHANNEL_ID}"
+          echo "REMINDER_BOT_TOKEN=${REMINDER_BOT_TOKEN}"
 
       - name: send pr reminder to discord
         run: |
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
           -H "Content-Type: application/json" \
-          -H "Authorization: Bot ${{secrets.REMINDER_BOT_TOKEN}}" \
+          -H "Authorization: Bot ${REMINDER_BOT_TOKEN}" \
           -d '{
             "embeds": [
               {
@@ -34,5 +37,6 @@ jobs:
               }
             ]
           }' \
-          https://discord.com/api/v10/channels/${{secrets.DISCORD_CHANNEL_ID_PR}}/messages)
+          "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages")
+
           echo "Response: $RESPONSE"

@@ -3,19 +3,49 @@ name: Notifier Discussion
 on:
   discussion:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
+    env:
+      TITLE: ${{github.event.discussion.title || 'Discussion Title' }}
+      USER: ${{github.event.discussion.user.login || 'User' }}
+      URL: ${{github.event.discussion.html_url || 'https://github.com/planet-devo-k/solveit/discussions' }}
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}
+      BOT_TOKEN: ${{ secrets.REMINDER_BOT_TOKEN }}
     steps:
       - name: notify discord on discussion created
         run: |
-          MESSAGE="**새 Discussion이 생성됐습니다**\n\n **제목**: ${{ github.event.discussion.title }}\n**작성자**: ${{ github.event.discussion.user.login }}\n[바로가기](${{ github.event.discussion.html_url }})"
-
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bot ${{ secrets.REMINDER_BOT_TOKEN }}" \
-            -d "{\"content\": \"$MESSAGE\"}" \
-            https://discord.com/api/v10/channels/${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}/messages)
+            -H "Authorization: Bot ${BOT_TOKEN}" \
+            -d '{
+              "embeds": [
+                {
+                  "title": "새 Discussion이 생성되었습니다",
+                  "description": "새로운 의견이나 질문이 올라왔어요. 함께 확인해봐요",
+                  "color": 5815039,
+                  "fields": [
+                    {
+                      "name": "제목",
+                      "value": "`'"${TITLE}"'`",
+                      "inline": false
+                    },
+                    {
+                      "name": "작성자",
+                      "value": "'"${USER}"'",
+                      "inline": true
+                    },
+                    {
+                      "name": "링크",
+                      "value": "[바로가기]('"${URL}"')",
+                      "inline": true
+                    }
+                  ]
+                }
+              ]
+            }' \
+            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages")
 
           echo "Discord Response Code: $RESPONSE"
