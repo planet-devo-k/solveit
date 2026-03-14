@@ -19,6 +19,20 @@ jobs:
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
           -H "Content-Type: application/json" \
           -H "Authorization: Bot ${{ secrets.REMINDER_BOT_TOKEN }}" \
-          -d "{\"content\": \"잊지 말고 PR올리고 Approve 하자~!\"}" \
+          -d '{
+            "embeds": [
+              {
+                "title": "PR 리마인더",
+                "description": "잊지 말고 PR 생성하고 코드 리뷰 하자~!",
+                "color": 16374876,
+                "fields": [
+                  {
+                    "name": "Deadline",
+                    "value": " ✓ PR 토요일 자정 \n ✓ 리뷰 일요일 오후 8시"
+                  }
+                ]
+              }
+            ]
+          }' \
           https://discord.com/api/v10/channels/${{ secrets.DISCORD_CHANNEL_ID_PR }}/messages)
           echo "Response: $RESPONSE"
