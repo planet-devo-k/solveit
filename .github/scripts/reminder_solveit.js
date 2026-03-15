@@ -22,7 +22,7 @@ export default async ({ github, context, core }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bot ${process.env.REMINDER_BOT_TOKEN}`,
+          Authorization: `Bot ${process.env.BOT_TOKEN}`,
         },
         body: JSON.stringify(discordPayload),
       },

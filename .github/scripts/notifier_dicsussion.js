@@ -3,7 +3,9 @@ export default async ({ github, context, core }) => {
     const discussion = context.payload.discussion;
     const title = discussion?.title || "Title";
     const user = discussion?.user?.login || "User";
-    const url = discussion?.html_url || "https://github.com";
+    const url =
+      discussion?.html_url ||
+      "https://github.com/planet-devo-k/solveit/discussions";
     const category = discussion?.category?.name || "General";
 
     const discordPayload = {
@@ -21,7 +23,7 @@ export default async ({ github, context, core }) => {
             },
             {
               name: "카테고리",
-              value: discussion?.category?.name || "General",
+              value: category,
               inline: true,
             },
           ],

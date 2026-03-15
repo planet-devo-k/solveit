@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_SOLVEIT}}
-      REMINDER_BOT_TOKEN: ${{secrets.REMINDER_BOT_TOKEN}}
+      BOT_TOKEN: ${{secrets.BOT_TOKEN_REMINDER}}
       SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/reminder_solveit.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 

@@ -11,7 +11,7 @@ jobs:
 
     env:
       DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}
-      BOT_TOKEN: ${{ secrets.REMINDER_BOT_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
       SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/notify_discussion.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
