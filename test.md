@@ -1,1 +1,2 @@
-test 중입니다.
+test 1
+test 2
