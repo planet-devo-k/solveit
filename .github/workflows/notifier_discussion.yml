@@ -28,7 +28,7 @@ jobs:
                 content: "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
                 embeds: [
                   {
-                    title: "NEW Discussion",
+                    title: "NEW Discussion\n━━━━━━━━━━━━━━━━━━━━━━",
                     description: `[${title}](${url})`,
                     color: 5815039,
                     fields: [

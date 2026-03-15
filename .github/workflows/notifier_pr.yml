@@ -49,7 +49,7 @@ jobs:
               const discordPayload = {
                 content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
                 embeds: [{
-                  title: "NEW PR",
+                  title: "NEW PR\n━━━━━━━━━━━━━━━━━━━━━━",
                   description: `[${pr.title}](${pr.html_url})`,
                   color: 5815039,
                   fields: [
