@@ -11,42 +11,17 @@ jobs:
     env:
       DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_SOLVEIT}}
       REMINDER_BOT_TOKEN: ${{secrets.REMINDER_BOT_TOKEN}}
+      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/reminder_solveit.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
       - name: send solveit reminder to discord
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            try {
-              const discordPayload = {
-                content: "함께 배우며 성장하는 시간, 이따 만나요!",
-                embeds: [
-                  {
-                    title: "오늘 스터디 있는 날\n━━━━━━━━━━━━━━━━━━━━━━",
-                    color: 16374876,
-                    fields: [
-                      {
-                        name: "When",
-                        value: "✓ 매주 일요일 오후 10시"
-                      }
-                    ]
-                  }
-                ]
-              };
-
-              const res = await fetch(`https://discord.com/api/v10/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bot ${process.env.REMINDER_BOT_TOKEN}`
-                },
-                body: JSON.stringify(discordPayload)
-              });
-
-              if (!res.ok) throw new Error(`Discord API error: ${res.status}`);
-              console.log("스터디 모임 리마인더 알림 전송 완료");
-
-            } catch (error) {
-              console.error("알림 전송 실패:", error.message);
-            }
+            const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
+            await run({ github, context, core });

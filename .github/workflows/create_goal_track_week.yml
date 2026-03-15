@@ -13,6 +13,7 @@ jobs:
       contains(github.event.issue.labels.*.name, 'epic')
 
     runs-on: ubuntu-latest
+
     permissions:
       issues: write
       repository-projects: write
@@ -20,13 +21,18 @@ jobs:
     env:
       TITLE: ${{ github.event.issue.title }}
       BODY: ${{ github.event.issue.body }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PARENT_NODE_ID: ${{ github.event.issue.node_id }}
-      OWNER: ${{ github.repository_owner }}
+      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_track_week.js
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
 
       - name: run JS script
-        run: node .github/scripts/create_goal_track_week.js
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
+            await run({ github, context, core });
