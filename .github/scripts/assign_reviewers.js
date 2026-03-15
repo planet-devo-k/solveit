@@ -7,7 +7,7 @@ export default async ({ github, context, core }) => {
   const prNumber = context.issue.number;
 
   try {
-    // 2 중복 배정 방지 로직: 이미 리뷰어가 배정되어 있는지 확인
+    // 2. 중복 배정 방지 로직: 이미 리뷰어가 배정되어 있는지 확인
     const { data: currentPR } = await github.rest.pulls.get({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -18,7 +18,11 @@ export default async ({ github, context, core }) => {
       currentPR.requested_reviewers &&
       currentPR.requested_reviewers.length > 0
     ) {
-      console.log("이미 리뷰어가 배정되어 있어 스크립트를 종료합니다.");
+      const existingReviewers = currentPR.requested_reviewers
+        .map((r) => `@${r.login}`)
+        .join(", ");
+
+      console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
       core.setOutput("reviewers", existingReviewers);
       return;
     }
