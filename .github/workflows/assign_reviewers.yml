@@ -1,0 +1,19 @@
+name: Assign Reviewers
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: assign Random Reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const script = require('./.github/scripts/assign-reviewers.js');
+            await script({ github, context });

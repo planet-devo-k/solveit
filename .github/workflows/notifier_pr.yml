@@ -8,44 +8,54 @@ on:
 jobs:
   notify-discord:
     runs-on: ubuntu-latest
+
     env:
-      TITLE: ${{github.event.pull_request.title || 'PR Title' }}
-      USER: ${{github.event.pull_request.user.login || 'User' }}
-      URL: ${{github.event.pull_request.html_url || 'https://github.com/planet-devo-k/solveit/pulls' }}
       DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_PR}}
       BOT_TOKEN: ${{secrets.REMINDER_BOT_TOKEN}}
-    steps:
-      - name: notify discord on PR created
-        run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bot ${BOT_TOKEN}" \
-            -d '{
-              "embeds": [
-                {
-                  "title": "NEW PR",
-                  "description": "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
-                  "color": 5815039,
-                  "fields": [
-                    {
-                      "name": "제목",
-                      "value": "'"${TITLE}"'",
-                      "inline": false
-                    },
-                    {
-                      "name": "작성자",
-                      "value": "'"${USER}"'",
-                      "inline": true
-                    },
-                    {
-                      "name": "링크",
-                      "value": "[바로가기]('"${URL}"')",
-                      "inline": true
-                    }
-                  ]
-                }
-              ]
-            }' \
-            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages")
+      WORKSPACE_PATH: ${{ github.workspace }}
 
-          echo "Discord Response Code: $RESPONSE"
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: assign reviewers
+        id: assign
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const scriptPath = `${process.env.WORKSPACE_PATH}/.github/scripts/assign_reviewers.js`;
+            const { default: run } = await import(scriptPath);
+            await run({ github, context, core });
+
+      - name: notify discord on PR created
+        uses: actions/github-script@v7
+        env:
+          SELECTED_REVIEWERS: ${{steps.assign.outputs.reviewers}}
+        with:
+          script: |
+            const discordPayload = {
+              embeds: [{
+                title: "NEW PR",
+                description: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
+                color: 5815039,
+                fields: [
+                  { name: "제목", value: context.payload.pull_request.title, inline: false},
+                  { name: "작성자", value: context.payload.pull_request.user.login, inline: true },
+                  { name: "지정 리뷰어", value: process.env.SELECTED_REVIEWERS, inline: true },
+                  { name: "링크", value: `[바로가기](${context.payload.pull_request.html_url})`, inline: false },
+                ]
+              }]
+            };
+
+            await fetch(`https://discord.com/api/v10/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bot ${process.env.BOT_TOKEN}`
+              },
+              body: JSON.stringify(discordPayload)
+            });
