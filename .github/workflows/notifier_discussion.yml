@@ -9,43 +9,52 @@ jobs:
   notify-discord:
     runs-on: ubuntu-latest
     env:
-      TITLE: ${{github.event.discussion.title || 'Discussion Title' }}
-      USER: ${{github.event.discussion.user.login || 'User' }}
-      URL: ${{github.event.discussion.html_url || 'https://github.com/planet-devo-k/solveit/discussions' }}
       DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}
       BOT_TOKEN: ${{ secrets.REMINDER_BOT_TOKEN }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: notify discord on discussion created
-        run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bot ${BOT_TOKEN}" \
-            -d '{
-              "embeds": [
-                {
-                  "title": "NEW Discussion",
-                  "description": "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
-                  "color": 5815039,
-                  "fields": [
-                    {
-                      "name": "제목",
-                      "value": "'"${TITLE}"'",
-                      "inline": false
-                    },
-                    {
-                      "name": "작성자",
-                      "value": "'"${USER}"'",
-                      "inline": true
-                    },
-                    {
-                      "name": "링크",
-                      "value": "[바로가기]('"${URL}"')",
-                      "inline": true
-                    }
-                  ]
-                }
-              ]
-            }' \
-            "https://discord.com/api/v10/channels/${DISCORD_CHANNEL_ID}/messages")
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const discussion = context.payload.discussion;
+              const title = discussion?.title || 'Discussion Title';
+              const user = discussion?.user?.login || 'User';
+              const url = discussion?.html_url || 'https://github.com/planet-devo-k/solveit/discussions';
+              
+              const discordPayload = {
+                content: "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
+                embeds: [
+                  {
+                    title: "NEW Discussion",
+                    description: `[${title}](${url})`,
+                    color: 5815039,
+                    fields: [
+                      {
+                        name: "작성자",
+                        value: user,
+                        inline: true
+                      },
+                      { name: "카테고리", value: discussion?.category?.name || "General", inline: true }
+                    ]
+                  }
+                ]
+              };
 
-          echo "Discord Response Code: $RESPONSE"
+              const res = await fetch(`https://discord.com/api/v10/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bot ${process.env.BOT_TOKEN}`
+                },
+                body: JSON.stringify(discordPayload)
+              });
+
+              if (!res.ok) throw new Error(`Discord API error: ${res.status}`);
+              console.log("디스코드 Discussion 알림 전송 완료");
+
+            } catch (error) {
+              console.error("알림 전송 실패:", error.message);
+            }
