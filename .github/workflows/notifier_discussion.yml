@@ -20,7 +20,7 @@ jobs:
           script: |
             try {
               const discussion = context.payload.discussion;
-              const title = discussion?.title || 'Discussion Title';
+              const title = discussion?.title || 'Title';
               const user = discussion?.user?.login || 'User';
               const url = discussion?.html_url || 'https://github.com/planet-devo-k/solveit/discussions';
               
