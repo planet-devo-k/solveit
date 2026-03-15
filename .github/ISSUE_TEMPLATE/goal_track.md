@@ -1,7 +1,7 @@
 ---
 name: "goal-tracking"
 about: "Use this template for using issues as goal tracking items."
-title: "`Week ~ Week` Programmers level0 / level1"
+title: "`Session: Week ~ Week` Programmers level0 / level1"
 assignees: "sgoldenbird"
 labels:
   - goal

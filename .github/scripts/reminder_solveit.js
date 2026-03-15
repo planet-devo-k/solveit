@@ -1,4 +1,6 @@
 export default async ({ github, context, core }) => {
+  const { sendDiscord } = await import("./utils/discord.js");
+
   try {
     const discordPayload = {
       content: "함께 배우며 성장하는 시간, 이따 만나요!",
@@ -16,19 +18,12 @@ export default async ({ github, context, core }) => {
       ],
     };
 
-    const res = await fetch(
-      `https://discord.com/api/v10/channels/${process.env.DISCORD_CHANNEL_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bot ${process.env.BOT_TOKEN}`,
-        },
-        body: JSON.stringify(discordPayload),
-      },
-    );
+    await sendDiscord({
+      channelId: process.env.DISCORD_CHANNEL_ID,
+      botToken: process.env.BOT_TOKEN,
+      payload: discordPayload,
+    });
 
-    if (!res.ok) throw new Error(`Discord API error: ${res.status}`);
     console.log("스터디 모임 리마인더 알림 전송 완료");
   } catch (error) {
     console.error("알림 전송 실패:", error.message);

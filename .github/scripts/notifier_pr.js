@@ -1,27 +1,17 @@
 export default async ({ github, context, core }) => {
+  const { waitForReviewers } = await import("./utils/github.js");
+  const { sendDiscord } = await import("./utils/discord.js");
   try {
-    let pr;
-    let reviewers = "";
+    // 리뷰어 배정 대기 및 PR 데이터 획득
+    const pr = await waitForReviewers({
+      github,
+      context,
+      pullNumber: context.issue.number,
+    });
 
-    // 리뷰어 배정을 기다리는 로직 (최대 5회 재시도)
-    for (let i = 0; i < 5; i++) {
-      const response = await github.rest.pulls.get({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: context.issue.number,
-      });
-
-      pr = response.data;
-
-      if (pr.requested_reviewers && pr.requested_reviewers.length > 0) {
-        reviewers = pr.requested_reviewers.map((r) => `@${r.login}`).join(", ");
-        console.log(`리뷰어 확인됨: ${reviewers}`);
-        break;
-      }
-
-      console.log(`리뷰어 배정 대기 중... (${i + 1}/5)`);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
+    const reviewers =
+      pr.requested_reviewers?.map((r) => `@${r.login}`).join(", ") ||
+      "리뷰어 지정 중...";
 
     const discordPayload = {
       content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
@@ -33,8 +23,8 @@ export default async ({ github, context, core }) => {
           fields: [
             { name: "작성자", value: pr.user.login, inline: true },
             {
-              name: "지정 리뷰어",
-              value: reviewers || "지정 중...",
+              name: "리뷰어",
+              value: reviewers,
               inline: true,
             },
           ],
@@ -42,19 +32,13 @@ export default async ({ github, context, core }) => {
       ],
     };
 
-    const res = await fetch(
-      `https://discord.com/api/v10/channels/${process.env.DISCORD_CHANNEL_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bot ${process.env.BOT_TOKEN}`,
-        },
-        body: JSON.stringify(discordPayload),
-      },
-    );
+    // 알림 전송 (utils 사용)
+    await sendDiscord({
+      channelId: process.env.DISCORD_CHANNEL_ID,
+      botToken: process.env.BOT_TOKEN,
+      payload: discordPayload,
+    });
 
-    if (!res.ok) throw new Error(`Discord API error: ${res.status}`);
     console.log("디스코드 PR 알림 전송 완료");
   } catch (error) {
     console.error("알림 전송 실패:", error.message);
