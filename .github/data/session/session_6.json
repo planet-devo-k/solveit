@@ -4,7 +4,7 @@
   "duration": 10,
   "labels": ["goal", "programmers", "epic", "level0", "level1"],
   "levels": [0, 1],
-  "weeks": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "weeks": [50, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   "title": "`Session6 : Week0 ~ Week9` Programmers level0 / level1",
   "date": {
     "start": "2026-03-16",

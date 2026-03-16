@@ -1,4 +1,4 @@
-name: Create Goal Track Week
+name: Create Goal Tracks
 
 on:
   workflow_dispatch:
