@@ -1,8 +1,16 @@
 import fs from "fs";
 import path from "path";
-import { MEMBERS } from "./utils/constants.js";
+import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 
 export default async ({ github, context, core }) => {
+  const { PROJECT_ID, START_DATE_FIELD_ID, END_DATE_FIELD_ID } = process.env;
+  const {
+    WEEKS_PER_SESSION,
+    PROGRAMMERS_ISSUE_NUMBER,
+    PROGRAMMERS_MILESTONE_ID,
+    PROGRAMMERS_BASE_URL,
+  } = STUDY_CONFIG;
+  const ORG_NAME = context.repo.owner;
   const OWNER_ID = "sgoldenbird";
   const SESSION_ID = "6";
 
@@ -26,46 +34,141 @@ export default async ({ github, context, core }) => {
   const sessionStartWeek = Math.min(...session.weeks);
   const sessionEndWeek = Math.max(...session.weeks);
   const levelLabels = session.levels.map((lvl) => `level${lvl}`);
+  const removeYamlFrontmatter = (text) =>
+    text.replace(/^---[\s\S]*?---/, "").trim();
+  const challengeLink = (c) => {
+    return `[${c.name}](${PROGRAMMERS_BASE_URL}/${c.id})`;
+  };
 
-  // 메타데이터 YAML Frontmatter 제거 함수
-  const removeYaml = (text) => text.replace(/^---[\s\S]*?---/, "").trim();
+  const updateProjectDates = async (contentId, startDate, endDate) => {
+    try {
+      // 1. 프로젝트에 아이템 추가 (PROJECT_ID는 PVT_로 시작하는 노드 ID여야 함)
+      const addRes = await github.graphql(
+        `mutation($projectId: ID!, $contentId: ID!) {
+          addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+            item { id }
+          }
+        }`,
+        { projectId: PROJECT_ID, contentId },
+      );
 
-  // 1. 세션 문제들 생성
-  const sessionChallengesText = session.challenges
-    .map((c) => {
-      const dateRange = `**week${c.week}** ${c.start.replace(/-/g, ".")} MON - ${c.end.replace(/-/g, ".")} SUN`;
-      const thisWeekChallenges =
-        c.list.length > 0
-          ? c.list.map((p) => `  * ${p}`).join("\n")
-          : "  * 미정";
-      return `${dateRange}\n\n${thisWeekChallenges}`;
-    })
-    .join("\n\n");
+      const itemId = addRes.addProjectV2ItemById.item.id;
 
-  // 2. 세션 바디 생성
-  const sessionBody = removeYaml(sessionTemplate)
-    .replace(/{{duration}}/g, session.duration)
-    .replace(/{{start_date}}/g, session.date.start.replace(/-/g, "."))
-    .replace(/{{end_date}}/g, session.date.end.replace(/-/g, "."))
-    .replace(/{{levels}}/g, session.levels.join(" and "))
-    .replace(/{{challenges_text}}/g, sessionChallengesText);
+      // 2. 필드 값 업데이트 (Start Date / End Date)
+      const updateField = async (fieldId, value) => {
+        await github.graphql(
+          `mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: String!) {
+            updateProjectV2ItemFieldValue(input: {
+              projectId: $projectId, 
+              itemId: $itemId, 
+              fieldId: $fieldId, 
+              value: { date: $value }
+            }) {
+              projectV2Item { id }
+            }
+          }`,
+          {
+            projectId: PROJECT_ID, // 💡 projectNodeId 대신 PROJECT_ID로 통일
+            itemId,
+            fieldId,
+            value,
+          },
+        );
+      };
 
-  try {
-    // 3. 세션 이슈 생성
-    const { data: sessionIssue } = await github.rest.issues.create({
+      await updateField(START_DATE_FIELD_ID, startDate);
+      await updateField(END_DATE_FIELD_ID, endDate);
+      console.log(
+        `프로젝트 연동 및 날짜 설정 완료 (${startDate} ~ ${endDate})`,
+      );
+    } catch (e) {
+      console.error(`프로젝트 연동 실패: ${e.message}`);
+    }
+  };
+
+  // 하위 이슈 연결 유틸리티 함수
+  const linkSubIssue = async (parentId, subIssueId) => {
+    await github.graphql(
+      `mutation($parentId: ID!, $subIssueId: ID!) {
+      addSubIssue(input: {issueId: $parentId, subIssueId: $subIssueId}) {
+        issue { id }
+      }
+    }`,
+      { parentId, subIssueId },
+    );
+  };
+
+  // 이슈 생성 및 템플릿 치환 공통 함수
+  const createIssue = async ({ title, body, labels, milestone = null }) => {
+    const { data } = await github.rest.issues.create({
       owner: context.repo.owner,
       repo: context.repo.repo,
+      title,
+      body,
+      assignees: [OWNER_ID],
+      labels,
+      milestone,
+    });
+    return data;
+  };
+
+  const replacePlaceholders = (template, data) => {
+    let result = template;
+    Object.entries(data).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, "g");
+      result = result.replace(regex, value);
+    });
+    return result;
+  };
+
+  try {
+    const sessionChallengesText = session.challenges
+      .map((c) => {
+        const dateRange = `**week${c.week}** ${c.date.start.replace(/-/g, ".")} MON - ${c.date.end.replace(/-/g, ".")} SUN`;
+        const thisWeekChallenges =
+          c.list.length > 0
+            ? c.list.map((p) => `  * ${challengeLink(p)}`).join("\n")
+            : "  * 미정";
+        return `${dateRange}\n\n${thisWeekChallenges}`;
+      })
+      .join("\n\n");
+
+    const sessionBody = replacePlaceholders(
+      removeYamlFrontmatter(sessionTemplate),
+      {
+        duration: WEEKS_PER_SESSION,
+        start_date: session.date.start.replace(/-/g, "."),
+        end_date: session.date.end.replace(/-/g, "."),
+        levels: session.levels.join(" and "),
+        challenges_text: sessionChallengesText,
+      },
+    );
+
+    const sessionIssue = await createIssue({
       title: `Session${SESSION_ID}: Week${sessionStartWeek} ~ Week${sessionEndWeek}`,
       body: sessionBody,
-      assignees: [OWNER_ID],
       labels: ["goal", "programmers", "session", ...levelLabels],
+      milestone: PROGRAMMERS_MILESTONE_ID,
     });
+    const sessionNodeId = sessionIssue.node_id;
+
+    // --- 143번 이슈를 부모로 연결 ---
+    const { data: programmersParent } = await github.rest.issues.get({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: PROGRAMMERS_ISSUE_NUMBER,
+    });
+
+    await linkSubIssue(programmersParent.node_id, sessionNodeId);
+
+    await updateProjectDates(
+      sessionIssue.node_id,
+      session.date.start,
+      session.date.end,
+    );
 
     console.log(`goal track session 생성 완료: #${sessionIssue.number}`);
 
-    // 4. 위크 이슈 생성
-    const sessionNodeId = sessionIssue.node_id;
-    const childNodeIds = [];
     const membersStatusChecklist = Object.values(MEMBERS)
       .map((name) => `- [ ] ${name}`)
       .join("\n");
@@ -74,47 +177,36 @@ export default async ({ github, context, core }) => {
     const weeks = session.challenges.slice(0, 2);
 
     for (const weekData of weeks) {
-      const weekChallengesText = weekData.list.map((p) => `* ${p}`).join("\n");
+      const weekChallengesText = weekData.list
+        .map((p) => `* ${challengeLink(p)}`)
+        .join("\n");
 
-      const weekBody = removeYaml(weekTemplate)
-        .replace(/{{levels}}/g, session.levels.join(" and "))
-        .replace(/{{start_date}}/g, weekData.start.replace(/-/g, "."))
-        .replace(/{{end_date}}/g, weekData.end.replace(/-/g, "."))
-        .replace(/{{challenges_text}}/g, weekChallengesText)
-        .replace(/{{members_status_checklist}}/g, membersStatusChecklist);
-
-      const { data: weekIssue } = await github.rest.issues.create({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        title: `Week ${weekData.week}`,
+      const weekBody = replacePlaceholders(
+        removeYamlFrontmatter(weekTemplate),
+        {
+          levels: session.levels.join(" and "),
+          start_date: weekData.date.start.replace(/-/g, "."),
+          end_date: weekData.date.end.replace(/-/g, "."),
+          challenges_text: weekChallengesText,
+          members_status_checklist: membersStatusChecklist,
+        },
+      );
+      const weekIssue = await createIssue({
+        title: `Week${weekData.week}`,
         body: weekBody,
-        assignees: [OWNER_ID],
         labels: ["goal", "programmers", ...levelLabels],
       });
 
-      childNodeIds.push(weekIssue.node_id);
+      await updateProjectDates(
+        weekIssue.node_id,
+        weekData.date.start,
+        weekData.date.end,
+      );
+
+      await linkSubIssue(sessionNodeId, weekIssue.node_id);
+
       console.log(
         `goal track week 생성 완료 ${weekData.week}: #${weekIssue.number}`,
-      );
-    }
-
-    // 5. GraphQL Mutation을 통한 관계 연결
-    for (const subIssueId of childNodeIds) {
-      await github.graphql(
-        `
-        mutation($parentId: ID!, $subIssueId: ID!) {
-          addSubIssue(input: {issueId: $parentId, subIssueId: $subIssueId}) {
-            issue {
-              id
-              title
-              }
-              }
-              }
-        `,
-        {
-          parentId: sessionNodeId,
-          subIssueId: subIssueId,
-        },
       );
     }
   } catch (error) {

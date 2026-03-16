@@ -10,6 +10,11 @@ export const MEMBERS = {
  * 스터디 운영 규칙 및 정보
  */
 export const STUDY_CONFIG = {
+  PROJECT_ID: 1,
   WEEKS_PER_SESSION: 10,
   MIN_REVIEWS_REQUIRED: 2,
+  PROGRAMMERS_ISSUE_NUMBER: 143,
+  PROGRAMMERS_MILESTONE_ID: 1,
+  PROGRAMMERS_BASE_URL:
+    "https://school.programmers.co.kr/learn/courses/30/lessons",
 };

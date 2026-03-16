@@ -20,9 +20,7 @@ labels:
 
 **Deadline**: {{end_date}} SUN
 
----
-
-# This Session Challenges
+## This Session Challenges
 
 {{challenges_text}}
 
@@ -42,11 +40,16 @@ labels:
   - [ ] Complete `Week 9`
   -->
 
----
+## Checklist
 
-# Checklist
+- [ ] 모든 멤버가 주차별 챌린지를 모두 완료하였습니다.
+- [ ] 각 멤버의 PR이 해당 주차 이슈에 연결되었습니다.
+- [ ] 해당 마일스톤이 연결되었습니다.
+- [ ] 모든 관련 이슈가 해결되었습니다.
 
-- [ ] All members have completed all weekly problems.
-- [ ] All related issues have been resolved.
+<!--
+- [ ] All members have completed all weekly challenges.
 - [ ] Each member’s PR is linked to the corresponding week.
 - [ ] The milestone is linked to this goal.
+- [ ] All related issues have been resolved.
+-->
