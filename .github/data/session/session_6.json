@@ -1,24 +1,44 @@
 {
-  "assignees": ["sgoldenbird"],
   "id": 6,
-  "duration": 10,
-  "labels": ["goal", "programmers", "epic", "level0", "level1"],
   "levels": [0, 1],
-  "weeks": [50, 51, 52, 3, 4, 5, 6, 7, 8, 9],
-  "title": "`Session6 : Week50 ~ Week59` Programmers level0 / level1",
+  "weeks": [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
   "date": {
     "start": "2026-03-16",
     "end": "2026-05-29"
   },
   "challenges": [
     {
-      "week": 0,
+      "week": 50,
       "start": "2026-03-16",
       "end": "2026-03-22",
       "list": ["두 수의 합", "나머지 구하기", "중앙값 구하기"]
     },
     {
-      "week": 1,
+      "week": 51,
+      "start": "2026-03-23",
+      "end": "2026-03-29",
+      "list": ["문제A", "문제B", "문제C"]
+    },
+    {
+      "week": 52,
+      "start": "2026-03-23",
+      "end": "2026-03-29",
+      "list": ["문제A", "문제B", "문제C"]
+    },
+    {
+      "week": 53,
+      "start": "2026-03-23",
+      "end": "2026-03-29",
+      "list": ["문제A", "문제B", "문제C"]
+    },
+    {
+      "week": 54,
+      "start": "2026-03-23",
+      "end": "2026-03-29",
+      "list": ["문제A", "문제B", "문제C"]
+    },
+    {
+      "week": 55,
       "start": "2026-03-23",
       "end": "2026-03-29",
       "list": ["문제A", "문제B", "문제C"]

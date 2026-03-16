@@ -10,35 +10,29 @@ labels:
   - level1
 ---
 
-## Goal
+# Goal
 
-**Week**: 2026. MON ~ 2026. SUN
+**Week**: ({{start_date}} ~ {{end_date}})
 
-**Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1.
+**Description**: Solve 3 coding challenges from Programmers Level {{levels}}.
 
-**Deadline**: 2026. SUN
-
----
-
-## This Week Challenges
-
-- Solve
-- Solve
-- Solve
+**Deadline**: {{end_date}}
 
 ---
 
-## Status
+# This Week Challenges
 
-- [ ] 시은
-- [ ] 수진
-- [ ] 유진
-- [ ] 인성
-- [ ] 혜란
+{{challenges_text}}
 
 ---
 
-## Checklist
+# Status
+
+{{members_status_checklist}}
+
+---
+
+# Checklist
 
 - [ ] All members have solved all problems.
 - [ ] All related issues have been resolved.

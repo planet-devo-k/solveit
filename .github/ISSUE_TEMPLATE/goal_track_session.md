@@ -7,7 +7,7 @@ assignees: "sgoldenbird"
 labels:
   - goal
   - programmers
-  - epic
+  - session
   - level0
   - level1
 ---
