@@ -1,7 +1,7 @@
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import { getThisWeekPullRequests, requestReviewers } from "./utils/github.js";
 import { shuffleArray } from "./utils/math.js";
-import sessionData from "../data/session/session_6.json";
+import sessionData from "../data/session/session_6.json" with { type: "json" };
 import { formatDateKST } from "./utils/date.js";
 
 export default async ({ github, context, core }) => {
