@@ -73,12 +73,13 @@ export default async ({ github, context, core }) => {
     });
 
     // 디스코드 알림을 위한 데이터 전달
-    core.setOutput(
-      "reviewers",
-      selectedReviewers.map((r) => `@${r}`).join(", "),
-    );
+    const selectedReviewersNames = selectedReviewers
+      .map((id) => MEMBERS[id] || id)
+      .join(", ");
 
-    console.log(`리뷰어 배정 완료: ${selectedReviewers.join(", ")}`);
+    core.setOutput("reviewers", selectedReviewersNames);
+
+    console.log(`리뷰어 배정 완료: ${selectedReviewersNames}`);
   } catch (error) {
     console.error("리뷰어 배정 프로세스 중 에러:", error.message);
     core.setFailed(error.message);
