@@ -3,7 +3,7 @@ export const MEMBERS = {
   pappaya109: "수진",
   yuj2n: "유진",
   "Insung-Jo": "인성",
-  gpfksdlrn: "혜란",
+  // gpfksdlrn: "혜란",
 };
 
 /**
