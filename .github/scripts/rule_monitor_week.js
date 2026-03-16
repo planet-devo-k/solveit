@@ -91,16 +91,32 @@ export default async ({ github, context, core }) => {
     });
 
     console.log("DEBUG 4: 테이블 생성 및 디스코드 전송 시도");
-    const tableConfig = {
-      headers: ["이름", "PR 제출", "리뷰"],
-      paddings: [6, 9, 6],
-      renderRow: (id) => {
-        const s = memberStatus[id];
-        const prStatus = s.submitted ? "✅" : "❌";
-        const reviewStatus = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`;
+    const getTableConfig = (includeAbsence = false) => {
+      const headers = ["이름", "PR 제출", "리뷰"];
+      const paddings = [6, 9, 6];
 
-        return { name: s.name || id, prStatus, reviewStatus };
-      },
+      if (includeAbsence) {
+        headers.push("출석");
+        paddings.push(6);
+      }
+
+      return {
+        headers,
+        paddings,
+        renderRow: (id) => {
+          const s = memberStatus[id];
+          const prStatus = s.submitted ? "✅" : "❌";
+          const reviewStatus = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`;
+
+          const rowData = { name: s.name || id, prStatus, reviewStatus };
+
+          if (includeAbsence) {
+            rowData.absence = "✅";
+          }
+
+          return rowData;
+        },
+      };
     };
 
     const incompleteMembers = memberIds.filter((id) => {
@@ -126,7 +142,10 @@ export default async ({ github, context, core }) => {
               fields: [
                 {
                   name: "\u200B",
-                  value: createDiscordTable(incompleteMembers, tableConfig),
+                  value: createDiscordTable(
+                    incompleteMembers,
+                    getTableConfig(false),
+                  ),
                   inline: false,
                 },
               ],
@@ -138,7 +157,7 @@ export default async ({ github, context, core }) => {
     }
 
     console.log("DEBUG 7: 디스커션 작성 시도");
-    const allTable = createMarkdownTable(memberIds, tableConfig);
+    const allTable = createMarkdownTable(memberIds, getTableConfig(true));
     const discussionTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;
     const discussionBody = `THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${formatDateKST(new Date())} 20:00 (KST)`;
 

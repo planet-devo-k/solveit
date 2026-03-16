@@ -9,19 +9,25 @@ import {
 import {
   createIssue,
   linkSubIssue,
-  addToProjectAndSetDates,
+  syncIssueToProject,
 } from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
-  const { PROJECT_ID, START_DATE_FIELD_ID, END_DATE_FIELD_ID } = process.env;
   const {
+    PROJECT_ID,
+    PROJECT_STATUS_ID,
+    START_DATE_FIELD_ID,
+    END_DATE_FIELD_ID,
+  } = process.env;
+  const {
+    PROJECT_STATUS_OPTIONS,
     WEEKS_PER_SESSION,
     PROGRAMMERS_ISSUE_NUMBER,
     PROGRAMMERS_MILESTONE_ID,
     PROGRAMMERS_BASE_URL,
   } = STUDY_CONFIG;
   // const { owner, repo } = context.repo;
-  const OWNER_ID = "sgoldenbird";
+  const ASSIGNEE_ID = "sgoldenbird";
   const SESSION_ID = "6";
 
   const dataPath = path.join(
@@ -74,36 +80,17 @@ export default async ({ github, context, core }) => {
       },
     );
 
+    console.log("마일스톤 번호:", PROGRAMMERS_MILESTONE_ID);
+    console.log("담당자 ID:", ASSIGNEE_ID);
+
     const sessionIssue = await createIssue({
       github,
       context,
       title: `\`Session${SESSION_ID}: Week${sessionStartWeek} ~ Week${sessionEndWeek}\``,
       body: sessionBody,
-      assignees: [OWNER_ID],
+      assignees: [ASSIGNEE_ID],
       labels: ["goal", "programmers", "session", ...levelLabels],
-      milestone: PROGRAMMERS_MILESTONE_ID,
-    });
-
-    await addToProjectAndSetDates({
-      github,
-      projectId: PROJECT_ID,
-      contentId: sessionIssue.node_id,
-      startDateFieldId: START_DATE_FIELD_ID,
-      endDateFieldId: END_DATE_FIELD_ID,
-      startDate: session.date.start,
-      endDate: session.date.end,
-    });
-
-    const { data: programmersParent } = await github.rest.issues.get({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: PROGRAMMERS_ISSUE_NUMBER,
-    });
-
-    await linkSubIssue({
-      github,
-      parentNodeId: programmersParent.node_id,
-      subIssueId: sessionIssue.node_id,
+      milestone: Number(PROGRAMMERS_MILESTONE_ID),
     });
 
     console.log(`goal track session 생성 완료: #${sessionIssue.number}`);
@@ -112,8 +99,8 @@ export default async ({ github, context, core }) => {
       .map((name) => `- [ ] ${name}`)
       .join("\n");
 
-    //! (테스트용 1개)
     const weeksToCreate = session.challenges.slice(0, 1);
+    const createdWeekIssues = [];
 
     for (const weekData of weeksToCreate) {
       const weekChallengesText = weekData.list
@@ -136,30 +123,73 @@ export default async ({ github, context, core }) => {
         context,
         title: `\`Week${weekData.week}\``,
         body: weekBody,
-        assignees: [OWNER_ID],
+        assignees: [ASSIGNEE_ID],
         labels: ["goal", "programmers", ...levelLabels],
-      });
-
-      await addToProjectAndSetDates({
-        github,
-        projectId: PROJECT_ID,
-        contentId: weekIssue.node_id,
-        startDateFieldId: START_DATE_FIELD_ID,
-        endDateFieldId: END_DATE_FIELD_ID,
-        startDate: weekData.date.start,
-        endDate: weekData.date.end,
-      });
-
-      await linkSubIssue({
-        github,
-        parentNodeId: sessionIssue.node_id,
-        subIssueId: weekIssue.node_id,
       });
 
       console.log(
         `goal track week 생성 완료 ${weekData.week}: #${weekIssue.number}`,
       );
+      createdWeekIssues.push({ data: weekData, issue: weekIssue });
+
+      // API 호출 간격 유지
+      await new Promise((res) => setTimeout(res, 1000));
     }
+
+    console.log(
+      "이슈 생성이 모두 완료되었습니다. 속성 안정화를 위해 3초 대기합니다...",
+    );
+    await new Promise((res) => setTimeout(res, 3000));
+
+    await syncIssueToProject({
+      github,
+      projectId: PROJECT_ID,
+      contentId: sessionIssue.node_id,
+      startDateFieldId: START_DATE_FIELD_ID,
+      endDateFieldId: END_DATE_FIELD_ID,
+      startDate: session.date.start,
+      endDate: session.date.end,
+      statusFieldId: PROJECT_STATUS_ID,
+      statusOptionId: PROJECT_STATUS_OPTIONS.IN_PROGRESS,
+    });
+    console.log("Session 이슈 프로젝트 연동 완료");
+
+    for (const { data, issue } of createdWeekIssues) {
+      await syncIssueToProject({
+        github,
+        projectId: PROJECT_ID,
+        contentId: issue.node_id,
+        startDateFieldId: START_DATE_FIELD_ID,
+        endDateFieldId: END_DATE_FIELD_ID,
+        startDate: data.date.start,
+        endDate: data.date.end,
+        statusFieldId: PROJECT_STATUS_ID,
+        statusOptionId: PROJECT_STATUS_OPTIONS.TODO,
+      });
+      console.log(`Week 이슈 프로젝트 연동 완료: #${issue.number}`);
+    }
+
+    const { data: programmersParent } = await github.rest.issues.get({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: PROGRAMMERS_ISSUE_NUMBER,
+    });
+
+    await linkSubIssue({
+      github,
+      parentNodeId: programmersParent.node_id,
+      subIssueId: sessionIssue.node_id,
+    });
+
+    for (const { issue } of createdWeekIssues) {
+      await linkSubIssue({
+        github,
+        parentNodeId: sessionIssue.node_id,
+        subIssueId: issue.node_id,
+      });
+    }
+
+    console.log("모든 작업이 완료되었습니다.");
   } catch (error) {
     core.setFailed(error.message);
   }

@@ -28,8 +28,9 @@ export const createMarkdownTable = (data, { headers, renderRow }) => {
 
   const rows = data
     .map((id) => {
-      const { name, prStatus, reviewStatus } = renderRow(id);
-      return `| ${name} | ${prStatus} | ${reviewStatus} |`;
+      const rowObj = renderRow(id);
+      const values = Object.values(rowObj);
+      return `| ${values.join(" | ")} |`;
     })
     .join("\n");
 
@@ -66,17 +67,23 @@ export const createDiscordTable = (
 
   const rows = data
     .map((id) => {
-      const row = renderRow(id);
+      const rowObj = renderRow(id);
+      const values = Object.values(rowObj);
 
-      const nameStr = row.name || id;
-      const prStr = row.prStatus || "❌";
-      const reviewStr = row.reviewStatus || "0/2";
+      return values
+        .map((val, i) => {
+          const str = String(val);
+          if (i === 0) return " " + str.padEnd(4, " ");
+          if (i === 1) return "   " + str + "   ";
+          if (i === 2) return " " + str.padEnd(5, " ");
 
-      const name = " " + nameStr.padEnd(4, " ");
-      const pr = "   " + prStr + "   ";
-      const review = " " + reviewStr.padEnd(5, " ");
-
-      return `${name}|${pr}|${review}`;
+          const targetWidth = paddings[i] || 10;
+          const currentWidth = getVisualWidth(str);
+          return (
+            " " + str + " ".repeat(Math.max(0, targetWidth - currentWidth - 1))
+          );
+        })
+        .join("|");
     })
     .join("\n");
 

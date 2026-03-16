@@ -10,6 +10,7 @@ export const createIssue = async ({
   assignees,
   milestone,
 }) => {
+  console.log("이슈 생성 인자:", { labels, assignees, milestone });
   const { data: newIssue } = await github.rest.issues.create({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -169,9 +170,9 @@ export const createDiscussion = async ({
 };
 
 /**
- * 프로젝트에 아이템을 추가하고 날짜 필드를 설정합니다.
+ * 이슈를 프로젝트 보드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
  */
-export const addToProjectAndSetDates = async ({
+export const syncIssueToProject = async ({
   github,
   projectId,
   contentId,
@@ -179,13 +180,9 @@ export const addToProjectAndSetDates = async ({
   endDateFieldId,
   startDate,
   endDate,
+  statusFieldId,
+  statusOptionId,
 }) => {
-  if (!projectId || !startDateFieldId || !endDateFieldId) {
-    console.log("프로젝트 설정이 누락되어 연결을 건너뜁니다.");
-    return;
-  }
-
-  // 1. 프로젝트 아이템 추가
   const addMutation = `
     mutation($projectId: ID!, $contentId: ID!) {
       addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) { item { id } }
@@ -194,11 +191,14 @@ export const addToProjectAndSetDates = async ({
   const addResult = await github.graphql(addMutation, { projectId, contentId });
   const itemId = addResult.addProjectV2ItemById.item.id;
 
-  // 2. 날짜 업데이트
+  console.log("GitHub 프로젝트 자동 동기화를 위해 2초간 대기합니다...");
+  await new Promise((res) => setTimeout(res, 2000));
+
   const updateMutation = `
-    mutation($projectId: ID!, $itemId: ID!, $startField: ID!, $endField: ID!, $startVal: Date!, $endVal: Date!) {
+    mutation($projectId: ID!, $itemId: ID!, $startField: ID!, $endField: ID!, $startVal: Date!, $endVal: Date!, $statusField: ID!, $statusVal: String!) {
       start: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $startField, value: { date: $startVal } }) { projectV2Item { id } }
       end: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $endField, value: { date: $endVal } }) { projectV2Item { id } }
+      status: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $statusField, value: { singleSelectOptionId: $statusVal } }) { projectV2Item { id } }
     }
   `;
 
@@ -209,7 +209,7 @@ export const addToProjectAndSetDates = async ({
     endField: endDateFieldId,
     startVal: startDate,
     endVal: endDate,
+    statusField: statusFieldId,
+    statusVal: statusOptionId,
   });
-
-  return itemId;
 };
