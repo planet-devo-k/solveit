@@ -50,13 +50,15 @@ export const getThisWeekPullRequests = async ({
   thisMonday,
   thisSaturday,
 }) => {
-  const { data: pullRequests } = await github.rest.pulls.list({
+  const response = await github.rest.pulls.list({
     owner: context.repo.owner,
     repo: context.repo.repo,
     state: "all",
     sort: "created",
     direction: "desc",
   });
+
+  const pullRequests = Array.isArray(response?.data) ? response.data : [];
 
   return pullRequests.filter((pr) => {
     const createdAt = new Date(pr.created_at);
@@ -132,35 +134,9 @@ export const getDiscussionCategory = async ({ github, context }) => {
   `;
   const res = await github.graphql(query, {
     owner: context.repo.owner,
-    name: context.repo.repo,
-  });
-  return res.repository;
-};
-
-/**
- * Discussion 제목으로 기존 Discussion을 검색하고, ID와 본문(body)을 반환합니다.
- */
-export const findSessionDiscussion = async ({ github, context, title }) => {
-  const query = `
-    query($owner: String!, $repo: String!) {
-      repository(owner: $owner, name: $repo) {
-        discussions(first: 50) {
-          nodes {
-            id
-            title
-            body
-          }
-        }
-      }
-    }
-  `;
-  const res = await github.graphql(query, {
-    owner: context.repo.owner,
     repo: context.repo.repo,
   });
-
-  // 제목이 정확히 일치하는 Discussion을 찾습니다.
-  return res.repository.discussions.nodes.find((d) => d.title === title);
+  return res.repository;
 };
 
 /**
@@ -190,23 +166,4 @@ export const createDiscussion = async ({
     body,
   });
   return res.createDiscussion.discussion;
-};
-
-/**
- * 기존 Discussion의 내용을 업데이트합니다.
- */
-export const updateDiscussion = async ({ github, discussionId, body }) => {
-  const mutation = `
-    mutation($id: ID!, $body: String!) {
-      updateDiscussion(input: {discussionId: $id, body: $body}) {
-        discussion {
-          id
-        }
-      }
-    }
-  `;
-  return await github.graphql(mutation, {
-    id: discussionId,
-    body,
-  });
 };

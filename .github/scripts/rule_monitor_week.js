@@ -3,6 +3,8 @@ import { formatDateKST } from "./utils/date.js";
 import { getThisWeekPullRequests } from "./utils/github.js";
 import { sendDiscord } from "./utils/discord.js";
 import sessionData from "../data/session/session_6.json" with { type: "json" };
+import { createDiscordTable, createMarkdownTable } from "./utils/formatter.js";
+import { getDiscussionCategory, createDiscussion } from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
   const { PROJECT_ID, WEEKS_PER_SESSION, MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
@@ -27,12 +29,14 @@ export default async ({ github, context, core }) => {
     console.log(`- PR 마감: ${formatDateKST(prDeadline)} 00:00`);
     console.log(`- 리뷰 마감: ${formatDateKST(reviewDeadline)} 20:00`);
 
+    console.log("DEBUG 1: PR 목록 가져오기 시도");
     const thisWeekPRs = await getThisWeekPullRequests({
       github,
       context,
       thisMonday: monday,
       thisSaturday: prDeadline,
     });
+    console.log(`DEBUG 2: PR 개수 = ${thisWeekPRs.length}`);
 
     const memberStatus = {};
     const memberIds = Object.keys(MEMBERS);
@@ -46,9 +50,11 @@ export default async ({ github, context, core }) => {
       };
     });
 
+    console.log("DEBUG 3: PR 및 리뷰 분석 루프 시작");
     for (const pr of thisWeekPRs) {
       const author = pr.user.login;
 
+      console.log(`DEBUG 4: PR #${pr.number} 분석 중 (작성자: ${author})`);
       if (memberStatus[author]) {
         memberStatus[author].submitted = true;
         memberStatus[author].prUrl = pr.html_url;
@@ -78,12 +84,26 @@ export default async ({ github, context, core }) => {
       });
     }
 
+    console.log("DEBUG 5: 테이블 생성 및 디스코드 전송 시도");
+
     memberIds.forEach((id) => {
       const status = memberStatus[id];
       if (status.reviewPrCount >= MIN_REVIEWS_REQUIRED) {
         status.hasMetReviewQuota = true;
       }
     });
+
+    const tableConfig = {
+      headers: ["이름", "PR 제출", "리뷰"],
+      paddings: [6, 9, 6],
+      renderRow: (id) => {
+        const s = memberStatus[id];
+        const prStatus = s.submitted ? "✅" : "❌";
+        const reviewStatus = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`;
+
+        return { name: s.name || id, prStatus, reviewStatus };
+      },
+    };
 
     // 디스코드 리포트 (미완료 멤버)
     const incompleteMembers = memberIds.filter((id) => {
@@ -92,36 +112,24 @@ export default async ({ github, context, core }) => {
     });
 
     if (incompleteMembers.length > 0) {
-      const tableHeader = "이름   | PR 제출 | 리뷰";
-      const tableDivider = "------|--------|----------";
-      const tableRows = incompleteMembers
-        .map((id) => {
-          const s = memberStatus[id];
-          const name = s.name.padEnd(4, " ");
-          const pr = s.submitted ? "  ✅  " : "  ❌  ";
-          const review = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`.padStart(
-            6,
-            " ",
-          );
-          return `${name} | ${pr} | ${review}`;
-        })
-        .join("\n");
-
-      const tableContent = `\`\`\`\n${tableHeader}\n${tableDivider}\n${tableRows}\n\`\`\``;
-
+      console.log(
+        `DEBUG 6: 미완료자 ${incompleteMembers.length}명 발견. 디스코드 전송 중...`,
+      );
       await sendDiscord({
         channelId: process.env.DISCORD_CHANNEL_ID,
         botToken: process.env.BOT_TOKEN,
         payload: {
-          content: "주간 미션 마감 현황 안내",
+          content: "주간 스터디 마감 현황",
           embeds: [
             {
               title: "MISSING SUBMISSIONS\n━━━━━━━━━━━━━━━━━━━━━━",
+              description:
+                "이번 주 활동 집계가 끝났습니다.\n아래 분들은 다음 주에 더 힘내봐요!",
               color: 15606862,
               fields: [
                 {
-                  name: "이번 주 활동 집계가 끝났습니다. 아래 분들은 다음 주에 더 힘내봐요!",
-                  value: tableContent,
+                  name: "\u200B",
+                  value: createDiscordTable(incompleteMembers, tableConfig),
                   inline: false,
                 },
               ],
@@ -129,6 +137,28 @@ export default async ({ github, context, core }) => {
             },
           ],
         },
+      });
+    }
+
+    // GitHub Discussion 리포트 (전체 인원)
+    console.log("DEBUG 7: 디스커션 작성 시도");
+    const allTable = createMarkdownTable(memberIds, tableConfig);
+    const discussionTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;
+    const discussionBody = `THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${formatDateKST(new Date())} 20:00 (KST)`;
+
+    const repository = await getDiscussionCategory({ github, context });
+    const categories = repository?.discussionCategories?.nodes || [];
+    const reportCategory = categories.find((cat) =>
+      cat.name.toUpperCase().includes("REPORT"),
+    );
+
+    if (reportCategory) {
+      await createDiscussion({
+        github,
+        repoId: repository.id,
+        categoryId: reportCategory.id,
+        title: discussionTitle,
+        body: discussionBody,
       });
     }
 

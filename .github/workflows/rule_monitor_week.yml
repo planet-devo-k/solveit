@@ -9,6 +9,11 @@ on:
 jobs:
   monitor-rules:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      discussions: write
+      pull-requests: read
+      issues: read
 
     env:
       DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_ALERT }}
@@ -23,7 +28,7 @@ jobs:
       - name: run rule monitor week script
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_PAT_PLANET_DEVO_K }}
           script: |
             const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
             await run({ github, context, core });

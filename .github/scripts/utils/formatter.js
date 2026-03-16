@@ -16,3 +16,69 @@ export const replacePlaceholders = (template, data) => {
   });
   return result;
 };
+
+/**
+ * 데이터를 바탕으로 마크다운 표를 생성합니다.
+ * @param {Array} data - 테이블에 표시할 데이터 배열
+ * @param {Object} config - 테이블 설정 (headers, renderRow)
+ */
+export const createMarkdownTable = (data, { headers, renderRow }) => {
+  const headerStr = `| ${headers.join(" | ")} |`;
+  const divider = `| ${headers.map((_, i) => (i === 0 ? ":---" : ":---:")).join(" | ")} |`;
+
+  const rows = data
+    .map((id) => {
+      const { name, prStatus, reviewStatus } = renderRow(id);
+      return `| ${name} | ${prStatus} | ${reviewStatus} |`;
+    })
+    .join("\n");
+
+  return `${headerStr}\n${divider}\n${rows}`;
+};
+
+/**
+ * Discord용 (고정 너비 코드 블록 표)
+ */
+export const createDiscordTable = (
+  data,
+  { headers, paddings = [], renderRow },
+) => {
+  const getVisualWidth = (str) => {
+    let width = 0;
+    for (let i = 0; i < str.length; i++) {
+      width += str.charCodeAt(i) > 0x007f ? 2 : 1;
+    }
+    return width;
+  };
+
+  const headerStr = headers
+    .map((h, i) => {
+      const targetWidth = paddings[i] || 10;
+      const text = h.trim();
+      const currentWidth = getVisualWidth(text);
+      return (
+        " " + text + " ".repeat(Math.max(0, targetWidth - currentWidth - 1))
+      );
+    })
+    .join("|");
+
+  const divider = paddings.map((p) => "-".repeat(p)).join("|");
+
+  const rows = data
+    .map((id) => {
+      const row = renderRow(id);
+
+      const nameStr = row.name || id;
+      const prStr = row.prStatus || "❌";
+      const reviewStr = row.reviewStatus || "0/2";
+
+      const name = " " + nameStr.padEnd(4, " ");
+      const pr = "   " + prStr + "   ";
+      const review = " " + reviewStr.padEnd(5, " ");
+
+      return `${name}|${pr}|${review}`;
+    })
+    .join("\n");
+
+  return `\`\`\`\n${headerStr}\n${divider}\n${rows}\n\`\`\``;
+};
