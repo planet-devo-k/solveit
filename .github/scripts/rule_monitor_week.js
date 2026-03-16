@@ -54,7 +54,7 @@ export default async ({ github, context, core }) => {
 
     if (!thisWeekGoal) {
       throw new Error(
-        `현재 주차(${targetDateStr})에 해당하는 goal 이슈를 찾을 수 없습니다. 레이블이나 본문의 Deadline을 확인해주세요.`,
+        `현재 주차(${thisSundayDate})에 해당하는 goal 이슈를 찾을 수 없습니다. 레이블이나 본문의 Deadline을 확인해주세요.`,
       );
     }
 

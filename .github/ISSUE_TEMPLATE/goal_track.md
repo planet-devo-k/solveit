@@ -1,6 +1,9 @@
 ---
-name: "goal-tracking"
+name: "goal track"
 about: "Use this template for using issues as goal tracking items."
+duration: "10 weeks"
+session:
+date: { start: "2026.", end: "2026." }
 title: "`Session: Week ~ Week` Programmers level0 / level1"
 assignees: "sgoldenbird"
 labels:
@@ -9,11 +12,22 @@ labels:
   - epic
   - level0
   - level1
+challenges:
+  - week0: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week1: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week2: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week3: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week4: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week5: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week6: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week7: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week8: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
+  - week9: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
 ---
 
 ## Goal
 
-**Week**: 10 weeks (2026. ~ 2026. )
+**Duration**: 10 weeks (2026. ~ 2026. )
 
 **Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1 every week.
 
