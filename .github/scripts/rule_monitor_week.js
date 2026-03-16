@@ -54,7 +54,6 @@ export default async ({ github, context, core }) => {
     for (const pr of thisWeekPRs) {
       const author = pr.user.login;
 
-      console.log(`DEBUG 4: PR #${pr.number} 분석 중 (작성자: ${author})`);
       if (memberStatus[author]) {
         memberStatus[author].submitted = true;
         memberStatus[author].prUrl = pr.html_url;
@@ -84,8 +83,6 @@ export default async ({ github, context, core }) => {
       });
     }
 
-    console.log("DEBUG 5: 테이블 생성 및 디스코드 전송 시도");
-
     memberIds.forEach((id) => {
       const status = memberStatus[id];
       if (status.reviewPrCount >= MIN_REVIEWS_REQUIRED) {
@@ -93,6 +90,7 @@ export default async ({ github, context, core }) => {
       }
     });
 
+    console.log("DEBUG 4: 테이블 생성 및 디스코드 전송 시도");
     const tableConfig = {
       headers: ["이름", "PR 제출", "리뷰"],
       paddings: [6, 9, 6],
@@ -105,7 +103,6 @@ export default async ({ github, context, core }) => {
       },
     };
 
-    // 디스코드 리포트 (미완료 멤버)
     const incompleteMembers = memberIds.filter((id) => {
       const s = memberStatus[id];
       return !(s.submitted && s.hasMetReviewQuota);
@@ -113,7 +110,7 @@ export default async ({ github, context, core }) => {
 
     if (incompleteMembers.length > 0) {
       console.log(
-        `DEBUG 6: 미완료자 ${incompleteMembers.length}명 발견. 디스코드 전송 중...`,
+        `DEBUG 5: 미완료자 ${incompleteMembers.length}명 발견. 디스코드 전송 중...`,
       );
       await sendDiscord({
         channelId: process.env.DISCORD_CHANNEL_ID,
@@ -140,7 +137,6 @@ export default async ({ github, context, core }) => {
       });
     }
 
-    // GitHub Discussion 리포트 (전체 인원)
     console.log("DEBUG 7: 디스커션 작성 시도");
     const allTable = createMarkdownTable(memberIds, tableConfig);
     const discussionTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;

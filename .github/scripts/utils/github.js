@@ -167,3 +167,49 @@ export const createDiscussion = async ({
   });
   return res.createDiscussion.discussion;
 };
+
+/**
+ * 프로젝트에 아이템을 추가하고 날짜 필드를 설정합니다.
+ */
+export const addToProjectAndSetDates = async ({
+  github,
+  projectId,
+  contentId,
+  startDateFieldId,
+  endDateFieldId,
+  startDate,
+  endDate,
+}) => {
+  if (!projectId || !startDateFieldId || !endDateFieldId) {
+    console.log("프로젝트 설정이 누락되어 연결을 건너뜁니다.");
+    return;
+  }
+
+  // 1. 프로젝트 아이템 추가
+  const addMutation = `
+    mutation($projectId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) { item { id } }
+    }
+  `;
+  const addResult = await github.graphql(addMutation, { projectId, contentId });
+  const itemId = addResult.addProjectV2ItemById.item.id;
+
+  // 2. 날짜 업데이트
+  const updateMutation = `
+    mutation($projectId: ID!, $itemId: ID!, $startField: ID!, $endField: ID!, $startVal: Date!, $endVal: Date!) {
+      start: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $startField, value: { date: $startVal } }) { projectV2Item { id } }
+      end: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $endField, value: { date: $endVal } }) { projectV2Item { id } }
+    }
+  `;
+
+  await github.graphql(updateMutation, {
+    projectId,
+    itemId,
+    startField: startDateFieldId,
+    endField: endDateFieldId,
+    startVal: startDate,
+    endVal: endDate,
+  });
+
+  return itemId;
+};

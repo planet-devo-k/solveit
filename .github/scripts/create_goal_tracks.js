@@ -6,17 +6,21 @@ import {
   removeYamlFrontmatter,
   replacePlaceholders,
 } from "./utils/formatter.js";
-import { createIssue, linkSubIssue } from "./utils/github.js";
+import {
+  createIssue,
+  linkSubIssue,
+  addToProjectAndSetDates,
+} from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
-  // const { PROJECT_ID, START_DATE_FIELD_ID, END_DATE_FIELD_ID } = process.env;
+  const { PROJECT_ID, START_DATE_FIELD_ID, END_DATE_FIELD_ID } = process.env;
   const {
     WEEKS_PER_SESSION,
     PROGRAMMERS_ISSUE_NUMBER,
     PROGRAMMERS_MILESTONE_ID,
     PROGRAMMERS_BASE_URL,
   } = STUDY_CONFIG;
-  // const ORG_NAME = context.repo.owner;
+  // const { owner, repo } = context.repo;
   const OWNER_ID = "sgoldenbird";
   const SESSION_ID = "6";
 
@@ -73,11 +77,21 @@ export default async ({ github, context, core }) => {
     const sessionIssue = await createIssue({
       github,
       context,
-      title: `Session${SESSION_ID}: Week${sessionStartWeek} ~ Week${sessionEndWeek}`,
+      title: `\`Session${SESSION_ID}: Week${sessionStartWeek} ~ Week${sessionEndWeek}\``,
       body: sessionBody,
       assignees: [OWNER_ID],
       labels: ["goal", "programmers", "session", ...levelLabels],
       milestone: PROGRAMMERS_MILESTONE_ID,
+    });
+
+    await addToProjectAndSetDates({
+      github,
+      projectId: PROJECT_ID,
+      contentId: sessionIssue.node_id,
+      startDateFieldId: START_DATE_FIELD_ID,
+      endDateFieldId: END_DATE_FIELD_ID,
+      startDate: session.date.start,
+      endDate: session.date.end,
     });
 
     const { data: programmersParent } = await github.rest.issues.get({
@@ -120,10 +134,20 @@ export default async ({ github, context, core }) => {
       const weekIssue = await createIssue({
         github,
         context,
-        title: `Week${weekData.week}`,
+        title: `\`Week${weekData.week}\``,
         body: weekBody,
         assignees: [OWNER_ID],
         labels: ["goal", "programmers", ...levelLabels],
+      });
+
+      await addToProjectAndSetDates({
+        github,
+        projectId: PROJECT_ID,
+        contentId: weekIssue.node_id,
+        startDateFieldId: START_DATE_FIELD_ID,
+        endDateFieldId: END_DATE_FIELD_ID,
+        startDate: weekData.date.start,
+        endDate: weekData.date.end,
       });
 
       await linkSubIssue({
