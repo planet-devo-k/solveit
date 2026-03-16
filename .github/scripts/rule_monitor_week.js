@@ -1,66 +1,32 @@
+import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
+import { formatDateKST } from "./utils/date.js";
+import { getThisWeekPullRequests } from "./utils/github.js";
+import { sendDiscord } from "./utils/discord.js";
+import sessionData from "../data/session/session_6.json" with { type: "json" };
+
 export default async ({ github, context, core }) => {
-  const { MEMBERS, RULES } = await import("./utils/constants.js");
-  const { formatDateKST, getThisMondayKST, getDeadlinesKST } =
-    await import("./utils/date.js");
-  const {
-    getThisWeekPullRequests,
-    findSessionDiscussion,
-    getDiscussionCategory,
-    createDiscussion,
-    updateDiscussion,
-  } = await import("./utils/github.js");
-  const { getMetadata } = await import("./utils/parser.js");
-  const { sendDiscord } = await import("./utils/discord.js");
+  const { PROJECT_ID, WEEKS_PER_SESSION, MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
 
   try {
-    const now = new Date();
-    const monday = getThisMondayKST(now);
-    const { prDeadline, reviewDeadline } = getDeadlinesKST(monday);
+    const nowStr = formatDateKST(new Date()).replace(/\./g, "-");
+    const currentWeekInfo = sessionData.challenges.find(
+      (c) => nowStr >= c.date.start && nowStr <= c.date.end,
+    );
 
-    // 이번 주 일요일 날짜를 미리 계산
-    const thisSundayDate = formatDateKST(reviewDeadline);
-    console.log(`조회 기준 날짜 (KST): ${thisSundayDate}`);
-
-    // 1. 'goal' 이슈에서 세션 메타데이터 추출 및 제목 설정
-    const { data: issues } = await github.rest.issues.listForRepo({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      labels: "goal",
-      state: "open",
-      per_page: 20,
-    });
-
-    console.log(`찾은 goal 이슈 개수: ${issues.length}개`);
-
-    // 2. 현재 주차에 맞는 goal 이슈 찾기
-    const thisWeekGoal = issues.find((issue) => {
-      try {
-        const deadlineStr = getMetadata(
-          issue.body,
-          /Deadline:\s*(.*)/,
-          "Deadline",
-        );
-
-        // 날짜가 포함되어 있는지 확인
-        const isMatch = deadlineStr.includes(thisSundayDate);
-        console.log(
-          `이슈 제목: ${issue.title} | Deadline: ${deadlineStr} | 매칭결과: ${isMatch}`,
-        );
-        return isMatch;
-      } catch (e) {
-        return false;
-      }
-    });
-
-    if (!thisWeekGoal) {
-      throw new Error(
-        `현재 주차(${thisSundayDate})에 해당하는 goal 이슈를 찾을 수 없습니다. 레이블이나 본문의 Deadline을 확인해주세요.`,
-      );
+    if (!currentWeekInfo) {
+      console.log(`(${nowStr})는 현재 스터디 진행 기간이 아닙니다.`);
+      return;
     }
 
-    const thisWeekTitle = thisWeekGoal.title;
+    const monday = new Date(currentWeekInfo.date.start);
+    const sunday = new Date(currentWeekInfo.date.end);
+    const prDeadline = new Date(sunday.getTime());
+    const reviewDeadline = new Date(sunday.getTime() + 20 * 60 * 60 * 1000);
 
-    // 3. 이번 주 PR 목록 조회 (토요일 마감 시한 적용)
+    console.log(`${currentWeekInfo.week}주차 모니터링 시작`);
+    console.log(`- PR 마감: ${formatDateKST(prDeadline)} 00:00`);
+    console.log(`- 리뷰 마감: ${formatDateKST(reviewDeadline)} 20:00`);
+
     const thisWeekPRs = await getThisWeekPullRequests({
       github,
       context,
@@ -68,10 +34,11 @@ export default async ({ github, context, core }) => {
       thisSaturday: prDeadline,
     });
 
-    // 4. 멤버별 활동 현황 데이터 구조 초기화
     const memberStatus = {};
-    MEMBERS.forEach((member) => {
-      memberStatus[member] = {
+    const memberIds = Object.keys(MEMBERS);
+    memberIds.forEach((id) => {
+      memberStatus[id] = {
+        name: MEMBERS[id],
         submitted: false,
         prUrl: "",
         reviewPrCount: 0,
@@ -79,7 +46,6 @@ export default async ({ github, context, core }) => {
       };
     });
 
-    // 5. PR 및 리뷰 활동 분석
     for (const pr of thisWeekPRs) {
       const author = pr.user.login;
 
@@ -94,7 +60,6 @@ export default async ({ github, context, core }) => {
         pull_number: pr.number,
       });
 
-      // [리뷰 필터링] 월요일 00:00 ~ 일요일 20:00 사이 작성된 리뷰만 인정
       const validReviews = reviews.filter((r) => {
         const submittedAt = new Date(r.submitted_at);
         return submittedAt >= monday && submittedAt <= reviewDeadline;
@@ -113,41 +78,53 @@ export default async ({ github, context, core }) => {
       });
     }
 
-    // 6. 규칙 준수 여부 판별
-    MEMBERS.forEach((member) => {
-      const status = memberStatus[member];
-      if (status.reviewPrCount >= RULES.MIN_REVIEWS_PER_WEEK) {
+    memberIds.forEach((id) => {
+      const status = memberStatus[id];
+      if (status.reviewPrCount >= MIN_REVIEWS_REQUIRED) {
         status.hasMetReviewQuota = true;
       }
     });
 
-    // 7. 디스코드 리포트 (미완료 멤버 위주)
-    const incompleteMembers = MEMBERS.filter((m) => {
-      const s = memberStatus[m];
+    // 디스코드 리포트 (미완료 멤버)
+    const incompleteMembers = memberIds.filter((id) => {
+      const s = memberStatus[id];
       return !(s.submitted && s.hasMetReviewQuota);
     });
 
     if (incompleteMembers.length > 0) {
-      const reportFields = incompleteMembers.map((m) => {
-        const s = memberStatus[m];
-        return {
-          name: `${m}`,
-          value: `PR제출: ${s.submitted ? "✅" : "❌"} | 리뷰: ${s.hasMetReviewQuota ? "✅" : "❌"} (${s.reviewPrCount}/${RULES.MIN_REVIEWS_PER_WEEK})`,
-          inline: false,
-        };
-      });
+      const tableHeader = "이름   | PR 제출 | 리뷰";
+      const tableDivider = "------|--------|----------";
+      const tableRows = incompleteMembers
+        .map((id) => {
+          const s = memberStatus[id];
+          const name = s.name.padEnd(4, " ");
+          const pr = s.submitted ? "  ✅  " : "  ❌  ";
+          const review = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`.padStart(
+            6,
+            " ",
+          );
+          return `${name} | ${pr} | ${review}`;
+        })
+        .join("\n");
 
-      // 8. 디스코드 전송
+      const tableContent = `\`\`\`\n${tableHeader}\n${tableDivider}\n${tableRows}\n\`\`\``;
+
       await sendDiscord({
         channelId: process.env.DISCORD_CHANNEL_ID,
         botToken: process.env.BOT_TOKEN,
         payload: {
-          content: "이번 주 스터디 활동 현황 보고",
+          content: "주간 미션 마감 현황 안내",
           embeds: [
             {
-              title: "THIS WEEK REPORT\n━━━━━━━━━━━━━━━━━━━━━━",
-              color: 3447003,
-              fields: reportFields,
+              title: "MISSING SUBMISSIONS\n━━━━━━━━━━━━━━━━━━━━━━",
+              color: 15606862,
+              fields: [
+                {
+                  name: "이번 주 활동 집계가 끝났습니다. 아래 분들은 다음 주에 더 힘내봐요!",
+                  value: tableContent,
+                  inline: false,
+                },
+              ],
               footer: { text: "일요일 오후 8시 기준 자동 집계" },
             },
           ],

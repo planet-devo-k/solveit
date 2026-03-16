@@ -12,7 +12,7 @@ jobs:
 
     env:
       DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_ALERT }}
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN_ALERT }}
       SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/rule_monitor_week.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
