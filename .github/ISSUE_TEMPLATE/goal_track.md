@@ -2,8 +2,6 @@
 name: "goal track"
 about: "Use this template for using issues as goal tracking items."
 duration: "10 weeks"
-session:
-date: { start: "2026.", end: "2026." }
 title: "`Session: Week ~ Week` Programmers level0 / level1"
 assignees: "sgoldenbird"
 labels:
@@ -12,42 +10,21 @@ labels:
   - epic
   - level0
   - level1
-challenges:
-  - week0: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week1: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week2: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week3: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week4: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week5: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week6: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week7: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week8: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
-  - week9: { start: "2026.", end: "2026.", challenges: ["", "", ""] }
 ---
 
 ## Goal
 
-**Duration**: 10 weeks (2026. ~ 2026. )
+**Duration**: {{duration}} weeks ({{start_date}} ~ {{end_date}})
 
-**Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1 every week.
+**Description**: Solve 3 coding challenges from Programmers Level {{levels}} every week.
 
-**Deadline**: 2026.0. SUN
+**Deadline**: {{end_date}} SUN
 
 ---
 
 ## This Session Challenges
 
-**week0** 2026. MON - 2026. SUN
-
-**week1** 2026. MON - 2026. SUN
-**week2** 2026. MON - 2026. SUN
-**week3** 2026. MON - 2026. SUN
-**week4** 2026. MON - 2026. SUN
-**week5** 2026. MON - 2026. SUN
-**week6** 2026. MON - 2026. SUN
-**week7** 2026. MON - 2026. SUN
-**week8** 2026. MON - 2026. SUN
-**week9** 2026. MON - 2026. SUN
+{{challenges_text}}
 
 <!--
 ## Progress

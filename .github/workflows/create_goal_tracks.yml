@@ -1,0 +1,30 @@
+name: Create Goal Track Week
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/data/session/session-*.json"
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      repository-projects: write
+
+    env:
+      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_tracks.js
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: run JS script
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
+            await run({ github, context, core });
