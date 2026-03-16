@@ -9,21 +9,12 @@ export const formatDateKST = (date) => {
 };
 
 /**
- * 특정 주차의 시작일(월요일)과 종료일(일요일) 계산
+ * 날짜 문자열의 하이픈을 점으로 치환 (단순 포맷 변경)
+ * 예: "2026-03-16" -> "2026.03.16"
  */
-export const getWeekRange = (startDateStr, weekOffset) => {
-  const start = new Date(startDateStr);
-  start.setDate(start.getDate() + weekOffset * 7);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-
-  return {
-    start,
-    end,
-    range: `${formatDateKST(start)} MON ~ ${formatDateKST(end)} SUN`,
-    deadline: `${formatDateKST(end)} SUN`,
-  };
+export const formatDateString = (dateStr) => {
+  if (!dateStr) return "";
+  return dateStr.replace(/-/g, ".");
 };
 
 /**

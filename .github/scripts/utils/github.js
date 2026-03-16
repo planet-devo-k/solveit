@@ -8,6 +8,7 @@ export const createIssue = async ({
   body,
   labels,
   assignees,
+  milestone,
 }) => {
   const { data: newIssue } = await github.rest.issues.create({
     owner: context.repo.owner,
@@ -16,6 +17,7 @@ export const createIssue = async ({
     body,
     labels,
     assignees,
+    milestone,
   });
   return newIssue;
 };
