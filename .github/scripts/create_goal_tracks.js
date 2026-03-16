@@ -5,7 +5,7 @@ export default async ({ github, context, core }) => {
   const SESSION_ID = "6";
   const dataPath = path.join(
     process.cwd(),
-    `.github/data/session/session-${SESSION_ID}.json`,
+    `.github/data/session/session_${SESSION_ID}.json`,
   );
   const templatePath = path.join(
     process.cwd(),
@@ -15,13 +15,20 @@ export default async ({ github, context, core }) => {
   const session = JSON.parse(fs.readFileSync(dataPath, "utf8"));
   let epicTemplate = fs.readFileSync(templatePath, "utf8");
 
+  // 메타데이터 YAML Frontmatter 제거
+  epicTemplate = epicTemplate.replace(/^---[\s\S]*?---/, "").trim();
+
   // 1. 이번 세션 문제들 생성
   const challengesText = session.challenges
-    .map(
-      (c) =>
-        `**week${c.week}** ${c.start.replace(/-/g, ".")} MON - ${c.end.replace(/-/g, ".")} SUN (${c.list.join(", ") || "미정"})`,
-    )
-    .join("\n");
+    .map((c) => {
+      const dateRange = `**week${c.week}** ${c.start.replace(/-/g, ".")} MON - ${c.end.replace(/-/g, ".")} SUN`;
+      const thisWeekChallenges =
+        c.list.length > 0
+          ? c.list.map((p) => `  * ${p}`).join("\n")
+          : "  * 미정";
+      return `${dateRange}\n\n${thisWeekChallenges}`;
+    })
+    .join("\n\n");
 
   // 2. 템플릿 치환
   const epicBody = epicTemplate
@@ -38,7 +45,7 @@ export default async ({ github, context, core }) => {
       repo: context.repo.repo,
       title: session.title,
       body: epicBody,
-      assignees: [session.assignees],
+      assignees: session.assignees,
       labels: session.labels,
     });
 

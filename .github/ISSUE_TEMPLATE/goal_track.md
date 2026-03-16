@@ -12,7 +12,7 @@ labels:
   - level1
 ---
 
-## Goal
+# Goal
 
 **Duration**: {{duration}} weeks ({{start_date}} ~ {{end_date}})
 
@@ -22,7 +22,7 @@ labels:
 
 ---
 
-## This Session Challenges
+# This Session Challenges
 
 {{challenges_text}}
 
@@ -44,7 +44,7 @@ labels:
 
 ---
 
-## Checklist
+# Checklist
 
 - [ ] All members have completed all weekly problems.
 - [ ] All related issues have been resolved.
