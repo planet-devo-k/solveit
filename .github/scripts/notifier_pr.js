@@ -9,8 +9,8 @@ export default async ({ github, context, core, data }) => {
       content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
       embeds: [
         {
-          title: "NEW PR\n━━━━━━━━━━━━━━━━━━━━━━",
-          description: `[${pr.title}](${pr.html_url})`,
+          title: `NEW PR\n━━━━━━━━━━━━━━━━━━━━━━\n[${pr.title}](${pr.html_url})`,
+          // description: `[${pr.title}](${pr.html_url})`,
           color: 5815039,
           fields: [
             { name: "작성자", value: pr.user.login, inline: true },

@@ -39,4 +39,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { default: notify } = await import(process.env.SCRIPT_FULL_PATH);
+<<<<<<< test
             await notify({ github, context, core, data: { reviewers: process.env.RESULT_DATA } });
+=======
+            const data = JSON.parse(process.env.RESULT_DATA);
+            await notify({ github, context, core, data: { reviewers: data } });
+>>>>>>> main
