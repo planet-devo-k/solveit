@@ -67,7 +67,7 @@ export const getThisWeekPRs = async ({
 };
 
 /**
- * 이슈를 프로젝트 보드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
+ * 이슈를 프로젝트 필드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
  */
 export const syncIssueToProject = async ({
   github,
@@ -112,7 +112,7 @@ export const syncIssueToProject = async ({
 };
 
 /**
- * 리뷰
+ * Review
  */
 export const requestReviewers = async ({
   github,
@@ -130,34 +130,9 @@ export const requestReviewers = async ({
   });
 };
 
-// 리뷰어 배정을 대기하며 PR 정보를 가져옵니다.
-// export const waitForReviewers = async ({
-//   github,
-//   context,
-//   pullNumber,
-//   retries = 5,
-//   delay = 2000,
-// }) => {
-//   let pr;
-//   for (let i = 0; i < retries; i++) {
-//     const { data } = await github.rest.pulls.get({
-//       owner: context.repo.owner,
-//       repo: context.repo.repo,
-//       pull_number: pullNumber,
-//     });
-
-//     pr = data;
-//     if (pr.requested_reviewers?.length > 0) {
-//       return pr;
-//     }
-
-//     console.log(`리뷰어 배정 대기 중... (${i + 1}/${retries})`);
-//     if (i < retries - 1)
-//       await new Promise((resolve) => setTimeout(resolve, delay));
-//   }
-//   return pr;
-// };
-
+/**
+ * Repository
+ */
 export const getRepositoryInfo = async ({ github, context }) => {
   const query = `
     query($owner: String!, $repo: String!) {
@@ -170,29 +145,12 @@ export const getRepositoryInfo = async ({ github, context }) => {
     owner: context.repo.owner,
     repo: context.repo.repo,
   });
-  return res.repository;
+  return res.repository.discussionCategories.nodes;
 };
 
 /**
  * Discussion
  */
-export const getDiscussionCategories = async ({ github, context }) => {
-  const query = `
-    query($owner: String!, $repo: String!) {
-      repository(owner: $owner, name: $repo) {
-        discussionCategories(first: 10) {
-          nodes { id name }
-        }
-      }
-    }
-  `;
-  const res = await github.graphql(query, {
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-  });
-  return res.repository.discussionCategories.nodes;
-};
-
 export const createDiscussion = async ({
   github,
   repoId,
@@ -224,6 +182,23 @@ export const createDiscussion = async ({
   });
 
   return res.createDiscussion.discussion;
+};
+
+export const getDiscussionCategories = async ({ github, context }) => {
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        discussionCategories(first: 10) {
+          nodes { id name }
+        }
+      }
+    }
+  `;
+  const res = await github.graphql(query, {
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+  });
+  return res.repository.discussionCategories.nodes;
 };
 
 /**

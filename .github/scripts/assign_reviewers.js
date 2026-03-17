@@ -1,7 +1,7 @@
+import sessionData from "../data/session/session_6.json" with { type: "json" };
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import { getThisWeekPRs, requestReviewers } from "./utils/github.js";
 import { shuffleArray } from "./utils/math.js";
-import sessionData from "../data/session/session_6.json" with { type: "json" };
 import { getKSTDateString } from "./utils/date.js";
 
 export default async ({ github, context, core }) => {
@@ -13,12 +13,11 @@ export default async ({ github, context, core }) => {
   try {
     if (currentPR.requested_reviewers?.length > 0) {
       const existingReviewers = currentPR.requested_reviewers
-        .map((r) => `@${r.login}`)
+        .map((r) => MEMBERS[r.login] || r.login)
         .join(", ");
 
       console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
-      core.setOutput("reviewers", existingReviewers);
-      return;
+      return existingReviewers;
     }
 
     const nowStr = getKSTDateString(new Date());
@@ -69,11 +68,12 @@ export default async ({ github, context, core }) => {
       .map((id) => MEMBERS[id] || id)
       .join(", ");
 
-    core.setOutput("reviewers", selectedReviewersNames);
-
     console.log(`리뷰어 배정 완료: ${selectedReviewersNames}`);
+
+    return selectedReviewersNames;
   } catch (error) {
     console.error("리뷰어 배정 프로세스 중 에러:", error.message);
     core.setFailed(error.message);
+    throw error;
   }
 };

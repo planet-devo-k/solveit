@@ -1,13 +1,13 @@
-import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import sessionData from "../data/session/session_6.json" with { type: "json" };
+import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import { getKSTDateString } from "./utils/date.js";
-// import { sendDiscord } from "./utils/discord.js";
 import { createDiscordTable, createMarkdownTable } from "./utils/formatter.js";
 import {
   getThisWeekPRs,
-  getDiscussionCategory,
+  getDiscussionCategories,
   createDiscussion,
   addLabelByName,
+  getRepositoryInfo,
 } from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
@@ -20,7 +20,7 @@ export default async ({ github, context, core }) => {
     );
 
     if (!currentWeekInfo) {
-      console.log(`(${nowStr})는 현재 스터디 진행 기간이 아닙니다.`);
+      console.warn(`(${nowStr})는 현재 스터디 진행 기간이 아닙니다.`);
       return;
     }
 
@@ -52,37 +52,39 @@ export default async ({ github, context, core }) => {
       };
     });
 
-    for (const pr of thisWeekPRs) {
-      const author = pr.user.login;
+    await Promise.all(
+      thisWeekPRs.map(async (pr) => {
+        const author = pr.user.login;
 
-      if (memberStatus[author]) {
-        memberStatus[author].submitted = true;
-        memberStatus[author].prUrl = pr.html_url;
-      }
-
-      const { data: reviews } = await github.rest.pulls.listReviews({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: pr.number,
-      });
-
-      const validReviews = reviews.filter((r) => {
-        const submittedAt = new Date(r.submitted_at);
-        return submittedAt >= thisMonday && submittedAt <= reviewDeadline;
-      });
-
-      const uniqueReviewersOnPr = new Set(
-        validReviews.map((r) => r.user.login),
-      );
-
-      uniqueReviewersOnPr.forEach((reviewerId) => {
-        const isStudyMember = memberStatus[reviewerId];
-        const isNotOwnPr = reviewerId !== author;
-        if (isStudyMember && isNotOwnPr) {
-          memberStatus[reviewerId].reviewPrCount++;
+        if (memberStatus[author]) {
+          memberStatus[author].submitted = true;
+          memberStatus[author].prUrl = pr.html_url;
         }
-      });
-    }
+
+        const { data: reviews } = await github.rest.pulls.listReviews({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          pull_number: pr.number,
+        });
+
+        const validReviews = reviews.filter((r) => {
+          const submittedAt = new Date(r.submitted_at);
+          return submittedAt >= thisMonday && submittedAt <= reviewDeadline;
+        });
+
+        const uniqueReviewersOnPr = new Set(
+          validReviews.map((r) => r.user.login),
+        );
+
+        uniqueReviewersOnPr.forEach((reviewerId) => {
+          const isStudyMember = memberStatus[reviewerId];
+          const isNotOwnPr = reviewerId !== author;
+          if (isStudyMember && isNotOwnPr) {
+            memberStatus[reviewerId].reviewPrCount++;
+          }
+        });
+      }),
+    );
 
     memberIds.forEach((id) => {
       const status = memberStatus[id];
@@ -125,84 +127,55 @@ export default async ({ github, context, core }) => {
       return !(s.submitted && s.hasMetReviewQuota);
     });
 
-    // + [추가] YAML에서 사용할 미완료자 테이블 문자열 미리 생성
-    const incompleteTable =
+    const discordIncompleteAlertTable =
       incompleteMembers.length > 0
         ? createDiscordTable(incompleteMembers, getTableConfig(false))
         : null;
 
-    // if (incompleteMembers.length > 0) {
-    //   await sendDiscord({
-    //     channelId: process.env.DISCORD_CHANNEL_ID,
-    //     botToken: process.env.BOT_TOKEN,
-    //     payload: {
-    //       content: "주간 스터디 마감 현황",
-    //       embeds: [
-    //         {
-    //           title: "MISSING SUBMISSIONS\n━━━━━━━━━━━━━━━━━━━━━━",
-    //           description:
-    //             "이번 주 활동 집계가 끝났습니다.\n아래 분들은 다음 주에 더 힘내봐요!",
-    //           color: 15606862,
-    //           fields: [
-    //             {
-    //               name: "\u200B",
-    //               value: createDiscordTable(
-    //                 incompleteMembers,
-    //                 getTableConfig(false),
-    //               ),
-    //               inline: false,
-    //             },
-    //           ],
-    //           footer: { text: "일요일 오후 8시 기준 자동 집계" },
-    //         },
-    //       ],
-    //     },
-    //   });
-    // }
-
     console.log("이번주 리포트 생성 중...");
     const allTable = createMarkdownTable(memberIds, getTableConfig(true));
-    const discussionTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;
-    const discussionBody = `## THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${getKSTDateString(new Date())} 20:00 (KST)`;
+    const reportTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;
+    const reportBody = `## THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${getKSTDateString(new Date())} 20:00 (KST)`;
 
-    const repository = await getDiscussionCategory({ github, context });
-    const reportCategory = repository?.discussionCategories?.nodes.find((cat) =>
-      cat.name.toUpperCase().includes("REPORT"),
+    const repository = await getRepositoryInfo({ github, context });
+    const categories = await getDiscussionCategories({ github, context });
+    const categoryReport = categories.find((cat) =>
+      cat.name.toLowerCase().includes("report"),
     );
 
-    let discussionResult = null;
+    let thisWeekReportResult = null;
 
-    if (reportCategory) {
-      const discussion = await createDiscussion({
+    if (categoryReport) {
+      const thisWeekReport = await createDiscussion({
         github,
         repoId: repository.id,
-        categoryId: reportCategory.id,
-        title: discussionTitle,
-        body: discussionBody,
+        categoryId: categoryReport.id,
+        title: reportTitle,
+        body: reportBody,
       });
 
       await addLabelByName({
         github,
         context,
-        nodeId: discussion.id,
+        nodeId: thisWeekReport.id,
         labelName: "report",
       });
 
-      // + [추가] 생성된 디스커션 정보를 결과 객체에 할당
-      discussionResult = {
-        title: discussionTitle,
-        url: `https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${discussion.number}`,
-        category: { name: reportCategory.name },
+      thisWeekReportResult = {
+        title: reportTitle,
+        url: `https://github.com/${context.repo.owner}/${context.repo.repo}/discussions/${thisWeekReport.number}`,
+        category: { name: categoryReport.name },
       };
     }
 
     console.log("주간 모니터링 보고 완료");
     return {
-      incompleteTable: incompleteTable,
-      discussion: discussionResult,
+      incompleteTable: discordIncompleteAlertTable,
+      data: thisWeekReportResult,
     };
   } catch (error) {
-    console.error("모니터링 프로세스 중 에러:", error.message);
+    console.error("모니터링 프로세스 중 에러 발생:", error.message);
     core.setFailed(error.message);
+    throw error;
   }
 };

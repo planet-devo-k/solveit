@@ -1,6 +1,3 @@
-/**
- * 디스코드 채널로 메시지를 전송합니다.
- */
 export const sendDiscord = async ({ channelId, botToken, payload }) => {
   const res = await fetch(
     `https://discord.com/api/v10/channels/${channelId}/messages`,

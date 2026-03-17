@@ -1,18 +1,18 @@
 import { sendDiscord } from "./utils/discord.js";
 
-export default async ({ github, context, core, alertData }) => {
+export default async ({ github, context, core, data }) => {
   try {
-    if (!alertData) return;
+    if (!data.alert) return;
 
     const payload = {
-      content: alertData.content || "ALERT",
+      content: data.alert.content || "ALERT",
       embeds: [
         {
-          title: `${alertData.title || "ALERT"}\n━━━━━━━━━━━━━━━━━━━━━━`,
-          description: alertData.description || "",
-          color: alertData.color || 15606862,
-          fields: alertData.fields || [],
-          footer: { text: alertData.footer || "Automation" },
+          title: `${data.alert.title || "ALERT"}\n━━━━━━━━━━━━━━━━━━━━━━`,
+          description: data.alert.description || "",
+          color: data.alert.color || 15606862,
+          fields: data.alert.fields || [],
+          footer: { text: data.alert.footer || "Automation" },
         },
       ],
     };
@@ -23,7 +23,7 @@ export default async ({ github, context, core, alertData }) => {
       payload: payload,
     });
 
-    console.log(`[Alert] ${alertData.title} 알림 전송 완료`);
+    console.log("디스코드 Alert 알림 전송 완료");
   } catch (error) {
     console.error("알림 전송 실패:", error.message);
     core.setFailed(error.message);
