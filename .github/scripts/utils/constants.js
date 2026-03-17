@@ -10,8 +10,7 @@ export const MEMBERS = {
  * 스터디 운영 규칙 및 정보
  */
 export const STUDY_CONFIG = {
-  PROJECT_ID: 1,
-  PROJECT_STATUS_OPTIONS: {
+  PROJECT_FIELD_STATUS_OPTIONS: {
     TODO: "f75ad846",
     IN_PROGRESS: "47fc9ee4",
     DONE: "98236657",
