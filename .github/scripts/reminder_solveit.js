@@ -1,6 +1,6 @@
-export default async ({ github, context, core }) => {
-  const { sendDiscord } = await import("./utils/discord.js");
+import { sendDiscord } from "./utils/discord.js";
 
+export default async ({ github, context, core }) => {
   try {
     const discordPayload = {
       content: "함께 배우며 성장하는 시간, 이따 만나요!",

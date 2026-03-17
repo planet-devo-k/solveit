@@ -9,6 +9,10 @@ jobs:
   send_message:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      pull-requests: read
+
     env:
       DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_PR}}
       BOT_TOKEN: ${{secrets.BOT_TOKEN_REMINDER}}

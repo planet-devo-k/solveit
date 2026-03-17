@@ -10,6 +10,7 @@ export const createIssue = async ({
   assignees,
   milestone,
 }) => {
+  console.log("이슈 생성 인자:", { labels, assignees, milestone });
   const { data: newIssue } = await github.rest.issues.create({
     owner: context.repo.owner,
     repo: context.repo.repo,
@@ -22,7 +23,6 @@ export const createIssue = async ({
   return newIssue;
 };
 
-// 하위 이슈(Sub-issue)를 부모 이슈에 연결합니다. (GraphQL 사용)
 export const linkSubIssue = async ({ github, parentNodeId, subIssueId }) => {
   if (!parentNodeId) return;
 
@@ -43,31 +43,77 @@ export const linkSubIssue = async ({ github, parentNodeId, subIssueId }) => {
 /**
  * PR
  */
-// 이번 주 월요일 이후에 생성된 모든 PR 목록을 가져옵니다.
-export const getThisWeekPullRequests = async ({
+export const getThisWeekPRs = async ({
   github,
   context,
-  thisMonday,
-  thisSaturday,
+  startDate,
+  endDate,
 }) => {
-  const { data: pullRequests } = await github.rest.pulls.list({
+  const allPRs = await github.paginate(github.rest.pulls.list, {
     owner: context.repo.owner,
     repo: context.repo.repo,
     state: "all",
     sort: "created",
     direction: "desc",
+    per_page: 100,
   });
 
-  return pullRequests.filter((pr) => {
+  console.log(`총 ${allPRs.length}개의 PR을 발견했습니다.`);
+
+  return allPRs.filter((pr) => {
     const createdAt = new Date(pr.created_at);
-    return createdAt >= thisMonday && createdAt <= thisSaturday;
+    return createdAt >= startDate && createdAt <= endDate;
+  });
+};
+
+/**
+ * 이슈를 프로젝트 보드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
+ */
+export const syncIssueToProject = async ({
+  github,
+  projectId,
+  contentId,
+  startDateFieldId,
+  endDateFieldId,
+  startDate,
+  endDate,
+  statusFieldId,
+  statusOptionId,
+}) => {
+  const addMutation = `
+    mutation($projectId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) { item { id } }
+    }
+  `;
+  const addResult = await github.graphql(addMutation, { projectId, contentId });
+  const itemId = addResult.addProjectV2ItemById.item.id;
+
+  console.log("GitHub 프로젝트 자동 동기화를 위해 2초간 대기합니다...");
+  await new Promise((res) => setTimeout(res, 2000));
+
+  const updateMutation = `
+    mutation($projectId: ID!, $itemId: ID!, $startField: ID!, $endField: ID!, $startVal: Date!, $endVal: Date!, $statusField: ID!, $statusVal: String!) {
+      start: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $startField, value: { date: $startVal } }) { projectV2Item { id } }
+      end: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $endField, value: { date: $endVal } }) { projectV2Item { id } }
+      status: updateProjectV2ItemFieldValue(input: { projectId: $projectId, itemId: $itemId, fieldId: $statusField, value: { singleSelectOptionId: $statusVal } }) { projectV2Item { id } }
+    }
+  `;
+
+  await github.graphql(updateMutation, {
+    projectId,
+    itemId,
+    startField: startDateFieldId,
+    endField: endDateFieldId,
+    startVal: startDate,
+    endVal: endDate,
+    statusField: statusFieldId,
+    statusVal: statusOptionId,
   });
 };
 
 /**
  * 리뷰
  */
-// PR에 리뷰어를 요청합니다.
 export const requestReviewers = async ({
   github,
   context,
@@ -85,71 +131,118 @@ export const requestReviewers = async ({
 };
 
 // 리뷰어 배정을 대기하며 PR 정보를 가져옵니다.
-export const waitForReviewers = async ({
-  github,
-  context,
-  pullNumber,
-  retries = 5,
-  delay = 2000,
-}) => {
-  let pr;
-  for (let i = 0; i < retries; i++) {
-    const { data } = await github.rest.pulls.get({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      pull_number: pullNumber,
-    });
+// export const waitForReviewers = async ({
+//   github,
+//   context,
+//   pullNumber,
+//   retries = 5,
+//   delay = 2000,
+// }) => {
+//   let pr;
+//   for (let i = 0; i < retries; i++) {
+//     const { data } = await github.rest.pulls.get({
+//       owner: context.repo.owner,
+//       repo: context.repo.repo,
+//       pull_number: pullNumber,
+//     });
 
-    pr = data;
-    if (pr.requested_reviewers?.length > 0) {
-      return pr;
+//     pr = data;
+//     if (pr.requested_reviewers?.length > 0) {
+//       return pr;
+//     }
+
+//     console.log(`리뷰어 배정 대기 중... (${i + 1}/${retries})`);
+//     if (i < retries - 1)
+//       await new Promise((resolve) => setTimeout(resolve, delay));
+//   }
+//   return pr;
+// };
+
+export const getRepositoryInfo = async ({ github, context }) => {
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        id
+      }
     }
-
-    console.log(`리뷰어 배정 대기 중... (${i + 1}/${retries})`);
-    if (i < retries - 1)
-      await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return pr;
+  `;
+  const res = await github.graphql(query, {
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+  });
+  return res.repository;
 };
 
 /**
  * Discussion
  */
-// Discussion 카테고리 목록 및 레포 ID 가져오기
-export const getDiscussionCategory = async ({ github, context }) => {
+export const getDiscussionCategories = async ({ github, context }) => {
   const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
-        id
         discussionCategories(first: 10) {
-          nodes {
-            id
-            name
-          }
+          nodes { id name }
         }
       }
     }
   `;
   const res = await github.graphql(query, {
     owner: context.repo.owner,
-    name: context.repo.repo,
+    repo: context.repo.repo,
   });
-  return res.repository;
+  return res.repository.discussionCategories.nodes;
+};
+
+export const createDiscussion = async ({
+  github,
+  repoId,
+  categoryId,
+  title,
+  body,
+}) => {
+  const createQuery = `
+    mutation($repoId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
+      createDiscussion(input: {
+        repositoryId: $repoId,
+        categoryId: $categoryId,
+        title: $title,
+        body: $body
+      }) {
+        discussion {
+          id
+          number
+        }
+      }
+    }
+  `;
+
+  const res = await github.graphql(createQuery, {
+    repoId,
+    categoryId,
+    title,
+    body,
+  });
+
+  return res.createDiscussion.discussion;
 };
 
 /**
- * Discussion 제목으로 기존 Discussion을 검색하고, ID와 본문(body)을 반환합니다.
+ * 이름으로 라벨을 찾아 대상(Node)에 추가합니다.
+ * 목록 조회 + ID 매칭 + 부착을 한 번에 처리합니다.
  */
-export const findSessionDiscussion = async ({ github, context, title }) => {
+export const addLabelByName = async ({
+  github,
+  context,
+  nodeId,
+  labelName,
+}) => {
+  if (!labelName) return;
+
   const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
-        discussions(first: 50) {
-          nodes {
-            id
-            title
-            body
-          }
+        labels(first: 100) {
+          nodes { id name }
         }
       }
     }
@@ -159,54 +252,27 @@ export const findSessionDiscussion = async ({ github, context, title }) => {
     repo: context.repo.repo,
   });
 
-  // 제목이 정확히 일치하는 Discussion을 찾습니다.
-  return res.repository.discussions.nodes.find((d) => d.title === title);
-};
+  const labels = res.repository.labels.nodes;
+  const targetLabel = labels.find(
+    (l) => l.name.toLowerCase() === labelName.toLowerCase(),
+  );
 
-/**
- * 새로운 Discussion을 생성합니다.
- */
-export const createDiscussion = async ({
-  github,
-  repoId,
-  categoryId,
-  title,
-  body,
-}) => {
-  const mutation = `
-    mutation($repoId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
-      createDiscussion(input: {repositoryId: $repoId, categoryId: $categoryId, title: $title, body: $body}) {
-        discussion {
-          id
-          body
-        }
-      }
+  if (!targetLabel) {
+    console.log(`라벨을 찾을 수 없습니다: ${labelName}`);
+    return;
+  }
+
+  const addMutation = `
+    mutation($labelableId: ID!, $labelIds: [ID!]!) {
+      addLabelsToLabelable(input: {
+        labelableId: $labelableId,
+        labelIds: $labelIds
+      }) { clientMutationId }
     }
   `;
-  const res = await github.graphql(mutation, {
-    repoId,
-    categoryId,
-    title,
-    body,
-  });
-  return res.createDiscussion.discussion;
-};
 
-/**
- * 기존 Discussion의 내용을 업데이트합니다.
- */
-export const updateDiscussion = async ({ github, discussionId, body }) => {
-  const mutation = `
-    mutation($id: ID!, $body: String!) {
-      updateDiscussion(input: {discussionId: $id, body: $body}) {
-        discussion {
-          id
-        }
-      }
-    }
-  `;
-  return await github.graphql(mutation, {
-    id: discussionId,
-    body,
+  await github.graphql(addMutation, {
+    labelableId: nodeId,
+    labelIds: [targetLabel.id],
   });
 };

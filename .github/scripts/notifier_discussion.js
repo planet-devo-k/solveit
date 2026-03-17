@@ -1,26 +1,30 @@
-export default async ({ github, context, core }) => {
-  const { sendDiscord } = await import("./utils/discord.js");
+import { sendDiscord } from "./utils/discord.js";
 
+export default async ({ github, context, core, discussion }) => {
   try {
-    const discussion = context.payload.discussion;
-    const title = discussion?.title || "Title";
-    const user = discussion?.user?.login || "User";
+    const target = discussion || context.payload.discussion;
+    const title = target?.title || (discussion ? "Bot" : "User");
+    const author = target?.user?.login || "User";
     const url =
-      discussion?.html_url ||
+      target?.html_url ||
+      target?.url ||
       "https://github.com/planet-devo-k/solveit/discussions";
-    const category = discussion?.category?.name || "General";
+    const category = target?.category?.name || "General";
+    const isReport = category.toLowerCase().includes("report") || !!discussion;
 
     const discordPayload = {
-      content: "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
+      content: isReport
+        ? "스터디 리포트가 발행되었습니다."
+        : "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
       embeds: [
         {
-          title: "NEW Discussion\n━━━━━━━━━━━━━━━━━━━━━━",
+          title: `${isReport ? "NEW REPORT" : "NEW POST"}\n━━━━━━━━━━━━━━━━━━━━━━`,
           description: `[${title}](${url})`,
-          color: 5815039,
+          color: isReport ? 16777215 : 5815039,
           fields: [
             {
               name: "작성자",
-              value: user,
+              value: author,
               inline: true,
             },
             {
