@@ -11,12 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       issues: write
       repository-projects: write
 
     env:
-      PROJECT_ID: ${{ secrets.PROJECT_ID }}
-      PROJECT_STATUS_ID: ${{ secrets.PROJECT_STATUS_ID }}
+      PROJECT_FIELD_ID: ${{ secrets.PROJECT_FIELD_ID }}
+      PROJECT_FIELD_STATUS_ID: ${{ secrets.PROJECT_FIELD_STATUS_ID }}
       START_DATE_FIELD_ID: ${{ secrets.START_DATE_FIELD_ID }}
       END_DATE_FIELD_ID: ${{ secrets.END_DATE_FIELD_ID }}
       SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_tracks.js

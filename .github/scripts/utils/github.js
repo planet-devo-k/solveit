@@ -23,7 +23,6 @@ export const createIssue = async ({
   return newIssue;
 };
 
-// 하위 이슈(Sub-issue)를 부모 이슈에 연결합니다. (GraphQL 사용)
 export const linkSubIssue = async ({ github, parentNodeId, subIssueId }) => {
   if (!parentNodeId) return;
 
@@ -44,26 +43,26 @@ export const linkSubIssue = async ({ github, parentNodeId, subIssueId }) => {
 /**
  * PR
  */
-// 이번 주 월요일 이후에 생성된 모든 PR 목록을 가져옵니다.
-export const getThisWeekPullRequests = async ({
+export const getThisWeekPRs = async ({
   github,
   context,
-  thisMonday,
-  thisSaturday,
+  startDate,
+  endDate,
 }) => {
-  const response = await github.rest.pulls.list({
+  const allPRs = await github.paginate(github.rest.pulls.list, {
     owner: context.repo.owner,
     repo: context.repo.repo,
     state: "all",
     sort: "created",
     direction: "desc",
+    per_page: 100,
   });
 
-  const pullRequests = Array.isArray(response?.data) ? response.data : [];
+  console.log(`총 ${allPRs.length}개의 PR을 발견했습니다.`);
 
-  return pullRequests.filter((pr) => {
+  return allPRs.filter((pr) => {
     const createdAt = new Date(pr.created_at);
-    return createdAt >= thisMonday && createdAt <= thisSaturday;
+    return createdAt >= startDate && createdAt <= endDate;
   });
 };
 
@@ -115,7 +114,6 @@ export const syncIssueToProject = async ({
 /**
  * 리뷰
  */
-// PR에 리뷰어를 요청합니다.
 export const requestReviewers = async ({
   github,
   context,
@@ -133,48 +131,38 @@ export const requestReviewers = async ({
 };
 
 // 리뷰어 배정을 대기하며 PR 정보를 가져옵니다.
-export const waitForReviewers = async ({
-  github,
-  context,
-  pullNumber,
-  retries = 5,
-  delay = 2000,
-}) => {
-  let pr;
-  for (let i = 0; i < retries; i++) {
-    const { data } = await github.rest.pulls.get({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      pull_number: pullNumber,
-    });
+// export const waitForReviewers = async ({
+//   github,
+//   context,
+//   pullNumber,
+//   retries = 5,
+//   delay = 2000,
+// }) => {
+//   let pr;
+//   for (let i = 0; i < retries; i++) {
+//     const { data } = await github.rest.pulls.get({
+//       owner: context.repo.owner,
+//       repo: context.repo.repo,
+//       pull_number: pullNumber,
+//     });
 
-    pr = data;
-    if (pr.requested_reviewers?.length > 0) {
-      return pr;
-    }
+//     pr = data;
+//     if (pr.requested_reviewers?.length > 0) {
+//       return pr;
+//     }
 
-    console.log(`리뷰어 배정 대기 중... (${i + 1}/${retries})`);
-    if (i < retries - 1)
-      await new Promise((resolve) => setTimeout(resolve, delay));
-  }
-  return pr;
-};
+//     console.log(`리뷰어 배정 대기 중... (${i + 1}/${retries})`);
+//     if (i < retries - 1)
+//       await new Promise((resolve) => setTimeout(resolve, delay));
+//   }
+//   return pr;
+// };
 
-/**
- * Discussion
- */
-// Discussion 카테고리 목록 및 레포 ID 가져오기
-export const getDiscussionCategory = async ({ github, context }) => {
+export const getRepositoryInfo = async ({ github, context }) => {
   const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
         id
-        discussionCategories(first: 10) {
-          nodes {
-            id
-            name
-          }
-        }
       }
     }
   `;
@@ -186,97 +174,25 @@ export const getDiscussionCategory = async ({ github, context }) => {
 };
 
 /**
- * 디스커션을 생성하고, 라벨이 있다면 라벨을 추가합니다.
+ * Discussion
  */
-// export const createDiscussion = async ({
-//   github,
-//   repoId,
-//   categoryId,
-//   title,
-//   body,
-//   labelIds = [],
-// }) => {
-//   const createQuery = `
-//     mutation($repoId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
-//       createDiscussion(input: {
-//         repositoryId: $repoId,
-//         categoryId: $categoryId,
-//         title: $title,
-//         body: $body
-//       }) {
-//         discussion {
-//           id
-//           number
-//         }
-//       }
-//     }
-//   `;
+export const getDiscussionCategories = async ({ github, context }) => {
+  const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        discussionCategories(first: 10) {
+          nodes { id name }
+        }
+      }
+    }
+  `;
+  const res = await github.graphql(query, {
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+  });
+  return res.repository.discussionCategories.nodes;
+};
 
-//   const res = await github.graphql(createQuery, {
-//     repoId,
-//     categoryId,
-//     title,
-//     body,
-//   });
-
-//   const discussionId = res.createDiscussion.discussion.id;
-
-//   if (labelIds.length > 0) {
-//     const addLabelQuery = `
-//       mutation($labelableId: ID!, $labelIds: [ID!]!) {
-//         addLabelsToLabelable(input: {
-//           labelableId: $labelableId,
-//           labelIds: $labelIds
-//         }) {
-//           clientMutationId
-//         }
-//       }
-//     `;
-
-//     await github.graphql(addLabelQuery, {
-//       labelableId: discussionId,
-//       labelIds: labelIds,
-//     });
-//   }
-
-//   return res.createDiscussion.discussion;
-// };
-
-// /**
-//  * 레포지토리의 모든 라벨 목록을 가져옵니다.
-//  */
-// export const getRepoLabels = async ({ github, context }) => {
-//   const query = `
-//     query($owner: String!, $repo: String!) {
-//       repository(owner: $owner, name: $repo) {
-//         labels(first: 100) {
-//           nodes { id name }
-//         }
-//       }
-//     }
-//   `;
-//   const res = await github.graphql(query, {
-//     owner: context.repo.owner,
-//     repo: context.repo.repo,
-//   });
-//   return res.repository.labels.nodes;
-// };
-
-// /**
-//  * 이름으로 라벨 ID를 찾습니다.
-//  */
-// export const findLabelIdByName = (labels, labelName) => {
-//   const label = labels.find(
-//     (l) => l.name.toLowerCase() === labelName.toLowerCase(),
-//   );
-//   return label ? label.id : null;
-// };
-
-//!
-
-/**
- * 2. 디스커션을 생성만 합니다.
- */
 export const createDiscussion = async ({
   github,
   repoId,
@@ -311,7 +227,7 @@ export const createDiscussion = async ({
 };
 
 /**
- * 1. 이름으로 라벨을 찾아 대상(Node)에 추가합니다.
+ * 이름으로 라벨을 찾아 대상(Node)에 추가합니다.
  * 목록 조회 + ID 매칭 + 부착을 한 번에 처리합니다.
  */
 export const addLabelByName = async ({
@@ -322,7 +238,6 @@ export const addLabelByName = async ({
 }) => {
   if (!labelName) return;
 
-  // 레포지토리의 모든 라벨 목록 가져오기
   const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
@@ -347,7 +262,6 @@ export const addLabelByName = async ({
     return;
   }
 
-  // 라벨 부착
   const addMutation = `
     mutation($labelableId: ID!, $labelIds: [ID!]!) {
       addLabelsToLabelable(input: {
