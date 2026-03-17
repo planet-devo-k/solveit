@@ -1,18 +1,25 @@
 import { sendDiscord } from "./utils/discord.js";
 
-export default async ({ github, context, core, alertData }) => {
+export default async ({ github, context, core, data = {} }) => {
   try {
-    if (!alertData) return;
+    const incompleteList = data.incompleteTable;
 
-    const payload = {
-      content: alertData.content || "ALERT",
+    const discordPayload = {
+      content: "이번주 미제출 인원",
       embeds: [
         {
-          title: `${alertData.title || "ALERT"}\n━━━━━━━━━━━━━━━━━━━━━━`,
-          description: alertData.description || "",
-          color: alertData.color || 15606862,
-          fields: alertData.fields || [],
-          footer: { text: alertData.footer || "Automation" },
+          title: "MISSING SUBMISSIONS\n━━━━━━━━━━━━━━━━━━━━━━",
+          description:
+            "이번 주 활동 집계가 끝났습니다.\n아래 분들은 다음 주에 더 힘내봐요!",
+          color: 15606862,
+          fields: [
+            {
+              name: "\u200B",
+              value: incompleteList,
+              inline: false,
+            },
+          ],
+          footer: { text: "일요일 오후 8시 기준 자동 집계" },
         },
       ],
     };
@@ -20,10 +27,10 @@ export default async ({ github, context, core, alertData }) => {
     await sendDiscord({
       channelId: process.env.DISCORD_CHANNEL_ID,
       botToken: process.env.BOT_TOKEN,
-      payload: payload,
+      payload: discordPayload,
     });
 
-    console.log(`[Alert] ${alertData.title} 알림 전송 완료`);
+    console.log("디스코드 알림 전송 완료");
   } catch (error) {
     console.error("알림 전송 실패:", error.message);
     core.setFailed(error.message);

@@ -1,16 +1,15 @@
 import { sendDiscord } from "./utils/discord.js";
 
-export default async ({ github, context, core, discussion }) => {
+export default async ({ github, context, core, data = {} }) => {
   try {
-    const target = discussion || context.payload.discussion;
-    const title = target?.title || (discussion ? "Bot" : "User");
-    const author = target?.user?.login || "User";
+    const title = data?.title || "NEW POST";
+    const author = data?.user?.login || "Bot";
     const url =
-      target?.html_url ||
-      target?.url ||
+      data?.html_url ||
+      data?.url ||
       "https://github.com/planet-devo-k/solveit/discussions";
-    const category = target?.category?.name || "General";
-    const isReport = category.toLowerCase().includes("report") || !!discussion;
+    const category = data?.category?.name || "General";
+    const isReport = category.toLowerCase().includes("report") || !!data?.title;
 
     const discordPayload = {
       content: isReport
@@ -47,5 +46,6 @@ export default async ({ github, context, core, discussion }) => {
   } catch (error) {
     console.error("알림 전송 실패:", error.message);
     core.setFailed(error.message);
+    throw error;
   }
 };

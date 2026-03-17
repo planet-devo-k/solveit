@@ -5,17 +5,13 @@ on:
     - cron: "0 0 * * 0" # 매주 일요일 9:00 (KST, UTC+9)
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   send_message:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
     env:
-      DISCORD_CHANNEL_ID: ${{secrets.DISCORD_CHANNEL_ID_SOLVEIT}}
-      BOT_TOKEN: ${{secrets.BOT_TOKEN_REMINDER}}
-      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/reminder_solveit.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -24,8 +20,12 @@ jobs:
 
       - name: send solveit reminder to discord
         uses: actions/github-script@v7
+        env:
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN_REMINDER }}
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/reminder_solveit.js
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
-            await run({ github, context, core });
+            const { default: remind } = await import(process.env.SCRIPT_FULL_PATH);
+            await remind({ github, context, core });
