@@ -14,7 +14,7 @@ labels:
 
 # Goal
 
-**Duration**: {{duration}} weeks ({{start_date}} ~ {{end_date}})
+**Duration**: {{duration}} weeks {{start_date}} ~ {{end_date}}
 
 **Description**: Solve 3 coding challenges from Programmers Level {{levels}} every week.
 
