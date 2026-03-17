@@ -6,13 +6,13 @@ on:
     paths:
       - ".github/data/session/session_*.json"
 
-permissions:
-  issues: write
-  repository-projects: write
-
 jobs:
   create-issues:
     runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      repository-projects: write
 
     env:
       PROJECT_ID: ${{ secrets.PROJECT_ID }}

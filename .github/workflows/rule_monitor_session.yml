@@ -1,0 +1,34 @@
+name: Rule Monitor Session
+
+on:
+  schedule:
+    - cron: "0 13 * * 0"
+  workflow_dispatch:
+
+jobs:
+  monitor-rules:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      discussions: write
+      pull-requests: read
+      issues: read
+
+    env:
+      DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_ALERT }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN_ALERT }}
+      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/rule_monitor_session.js
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: run rule monitor session script
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PAT_PLANET_DEVO_K }}
+          script: |
+            const { default: run } = await import(process.env.SCRIPT_FULL_PATH);
+            await run({ github, context, core });

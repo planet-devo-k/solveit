@@ -1,13 +1,17 @@
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
-import { formatDateKST } from "./utils/date.js";
-import { getThisWeekPullRequests } from "./utils/github.js";
-import { sendDiscord } from "./utils/discord.js";
 import sessionData from "../data/session/session_6.json" with { type: "json" };
+import { formatDateKST } from "./utils/date.js";
+import { sendDiscord } from "./utils/discord.js";
 import { createDiscordTable, createMarkdownTable } from "./utils/formatter.js";
-import { getDiscussionCategory, createDiscussion } from "./utils/github.js";
+import {
+  getThisWeekPullRequests,
+  getDiscussionCategory,
+  createDiscussion,
+  addLabelByName,
+} from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
-  const { PROJECT_ID, WEEKS_PER_SESSION, MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
+  const { MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
 
   try {
     const nowStr = formatDateKST(new Date()).replace(/\./g, "-");
@@ -156,24 +160,30 @@ export default async ({ github, context, core }) => {
       });
     }
 
-    console.log("DEBUG 7: 디스커션 작성 시도");
+    console.log("DEBUG 7: 디스커션 리포트 생성 중...");
     const allTable = createMarkdownTable(memberIds, getTableConfig(true));
     const discussionTitle = `\`Week${currentWeekInfo.week}\` 스터디 활동 리포트`;
-    const discussionBody = `THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${formatDateKST(new Date())} 20:00 (KST)`;
+    const discussionBody = `## THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${formatDateKST(new Date())} 20:00 (KST)`;
 
     const repository = await getDiscussionCategory({ github, context });
-    const categories = repository?.discussionCategories?.nodes || [];
-    const reportCategory = categories.find((cat) =>
+    const reportCategory = repository?.discussionCategories?.nodes.find((cat) =>
       cat.name.toUpperCase().includes("REPORT"),
     );
 
     if (reportCategory) {
-      await createDiscussion({
+      const discussion = await createDiscussion({
         github,
         repoId: repository.id,
         categoryId: reportCategory.id,
         title: discussionTitle,
         body: discussionBody,
+      });
+
+      await addLabelByName({
+        github,
+        context,
+        nodeId: discussion.id,
+        labelName: "report",
       });
     }
 

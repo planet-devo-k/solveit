@@ -9,6 +9,7 @@ on:
 jobs:
   monitor-rules:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       discussions: write
