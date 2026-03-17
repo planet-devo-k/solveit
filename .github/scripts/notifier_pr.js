@@ -1,17 +1,20 @@
+import { sendDiscord } from "./utils/discord.js";
+// import { waitForReviewers } from "./utils/github.js";
+
 export default async ({ github, context, core }) => {
-  const { waitForReviewers } = await import("./utils/github.js");
-  const { sendDiscord } = await import("./utils/discord.js");
   try {
     // 리뷰어 배정 대기 및 PR 데이터 획득
-    const pr = await waitForReviewers({
-      github,
-      context,
-      pullNumber: context.issue.number,
-    });
+    // const pr = await waitForReviewers({
+    //   github,
+    //   context,
+    //   pullNumber: context.issue.number,
+    // });
 
-    const reviewers =
-      pr.requested_reviewers?.map((r) => `@${r.login}`).join(", ") ||
-      "리뷰어 지정 중...";
+    // const reviewers =
+    //   pr.requested_reviewers?.map((r) => `@${r.login}`).join(", ") ||
+    //   "리뷰어 지정 중...";
+    const pr = context.payload.pull_request;
+    const reviewers = process.env.ASSIGNED_REVIEWERS || "리뷰어 지정 중...";
 
     const discordPayload = {
       content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
@@ -32,7 +35,6 @@ export default async ({ github, context, core }) => {
       ],
     };
 
-    // 알림 전송 (utils 사용)
     await sendDiscord({
       channelId: process.env.DISCORD_CHANNEL_ID,
       botToken: process.env.BOT_TOKEN,

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
-import { formatDateString } from "./utils/date.js";
+import sessionData from "../data/session/session_6.json" with { type: "json" };
 import {
   removeYamlFrontmatter,
   replacePlaceholders,
@@ -14,26 +14,22 @@ import {
 
 export default async ({ github, context, core }) => {
   const {
-    PROJECT_ID,
-    PROJECT_STATUS_ID,
+    PROJECT_FIELD_ID,
+    PROJECT_FIELD_STATUS_ID,
     START_DATE_FIELD_ID,
     END_DATE_FIELD_ID,
   } = process.env;
   const {
-    PROJECT_STATUS_OPTIONS,
+    PROJECT_FIELD_STATUS_OPTIONS,
     WEEKS_PER_SESSION,
     PROGRAMMERS_ISSUE_NUMBER,
     PROGRAMMERS_MILESTONE_ID,
     PROGRAMMERS_BASE_URL,
   } = STUDY_CONFIG;
-  // const { owner, repo } = context.repo;
-  const ASSIGNEE_ID = "sgoldenbird";
-  const SESSION_ID = "6";
 
-  const dataPath = path.join(
-    process.cwd(),
-    `.github/data/session/session_${SESSION_ID}.json`,
-  );
+  const ASSIGNEE_ID = "sgoldenbird";
+  const SESSION_ID = sessionData.id;
+
   const sessionTemplatePath = path.join(
     process.cwd(),
     ".github/ISSUE_TEMPLATE/goal_track_session.md",
@@ -43,23 +39,22 @@ export default async ({ github, context, core }) => {
     ".github/ISSUE_TEMPLATE/goal_track_week.md",
   );
 
-  const session = JSON.parse(fs.readFileSync(dataPath, "utf8"));
   let sessionTemplate = fs.readFileSync(sessionTemplatePath, "utf8");
   let weekTemplate = fs.readFileSync(weekTemplatePath, "utf8");
 
-  const sessionStartWeek = Math.min(...session.weeks);
-  const sessionEndWeek = Math.max(...session.weeks);
-  const levelLabels = session.levels.map((lvl) => `level${lvl}`);
+  const sessionStartWeek = Math.min(...sessionData.weeks);
+  const sessionEndWeek = Math.max(...sessionData.weeks);
+  const levelLabels = sessionData.levels.map((lvl) => `level${lvl}`);
 
   const challengeLink = (c) => {
     return `[${c.name}](${PROGRAMMERS_BASE_URL}/${c.id})`;
   };
 
   try {
-    const sessionChallengesText = session.challenges
+    const sessionChallengesText = sessionData.challenges
       .map((c) => {
-        const start = formatDateString(c.date.start);
-        const end = formatDateString(c.date.end);
+        const start = c.date.start;
+        const end = c.date.end;
         const dateRange = `**week${c.week}** ${start} MON - ${end} SUN`;
         const thisWeekChallenges =
           c.list.length > 0
@@ -73,17 +68,14 @@ export default async ({ github, context, core }) => {
       removeYamlFrontmatter(sessionTemplate),
       {
         duration: WEEKS_PER_SESSION,
-        start_date: formatDateString(session.date.start),
-        end_date: formatDateString(session.date.end),
-        levels: session.levels.join(" and "),
+        start_date: sessionData.date.start,
+        end_date: sessionData.date.end,
+        levels: sessionData.levels.join(" and "),
         challenges_text: sessionChallengesText,
       },
     );
 
-    console.log("마일스톤 번호:", PROGRAMMERS_MILESTONE_ID);
-    console.log("담당자 ID:", ASSIGNEE_ID);
-
-    const sessionIssue = await createIssue({
+    const thisSessionGoal = await createIssue({
       github,
       context,
       title: `\`Session${SESSION_ID}: Week${sessionStartWeek} ~ Week${sessionEndWeek}\``,
@@ -93,14 +85,14 @@ export default async ({ github, context, core }) => {
       milestone: Number(PROGRAMMERS_MILESTONE_ID),
     });
 
-    console.log(`goal track session 생성 완료: #${sessionIssue.number}`);
+    console.log(`goal track session 생성 완료: #${thisSessionGoal.number}`);
 
-    const membersStatusChecklist = Object.values(MEMBERS)
+    const membersWeeklyChecklist = Object.values(MEMBERS)
       .map((name) => `- [ ] ${name}`)
       .join("\n");
 
-    const weeksToCreate = session.challenges.slice(0, 1);
-    const createdWeekIssues = [];
+    const weeksToCreate = sessionData.challenges.slice(0, 1);
+    const createdWeekGoals = [];
 
     for (const weekData of weeksToCreate) {
       const weekChallengesText = weekData.list
@@ -110,15 +102,15 @@ export default async ({ github, context, core }) => {
       const weekBody = replacePlaceholders(
         removeYamlFrontmatter(weekTemplate),
         {
-          levels: session.levels.join(" and "),
-          start_date: formatDateString(weekData.date.start),
-          end_date: formatDateString(weekData.date.end),
+          levels: sessionData.levels.join(" and "),
+          start_date: weekData.date.start,
+          end_date: weekData.date.end,
           challenges_text: weekChallengesText,
-          members_status_checklist: membersStatusChecklist,
+          members_status_checklist: membersWeeklyChecklist,
         },
       );
 
-      const weekIssue = await createIssue({
+      const thisWeekGoal = await createIssue({
         github,
         context,
         title: `\`Week${weekData.week}\``,
@@ -128,11 +120,11 @@ export default async ({ github, context, core }) => {
       });
 
       console.log(
-        `goal track week 생성 완료 ${weekData.week}: #${weekIssue.number}`,
+        `goal track week 생성 완료 ${weekData.week}: #${thisWeekGoal.number}`,
       );
-      createdWeekIssues.push({ data: weekData, issue: weekIssue });
+      createdWeekGoals.push({ data: weekData, issue: thisWeekGoal });
 
-      // API 호출 간격 유지
+      // API 호출 간격 유지(Secondary Rate Limits 방지용)
       await new Promise((res) => setTimeout(res, 1000));
     }
 
@@ -143,30 +135,30 @@ export default async ({ github, context, core }) => {
 
     await syncIssueToProject({
       github,
-      projectId: PROJECT_ID,
-      contentId: sessionIssue.node_id,
+      projectId: PROJECT_FIELD_ID,
+      contentId: thisSessionGoal.node_id,
       startDateFieldId: START_DATE_FIELD_ID,
       endDateFieldId: END_DATE_FIELD_ID,
-      startDate: session.date.start,
-      endDate: session.date.end,
-      statusFieldId: PROJECT_STATUS_ID,
-      statusOptionId: PROJECT_STATUS_OPTIONS.IN_PROGRESS,
+      startDate: sessionData.date.start,
+      endDate: sessionData.date.end,
+      statusFieldId: PROJECT_FIELD_STATUS_ID,
+      statusOptionId: PROJECT_FIELD_STATUS_OPTIONS.IN_PROGRESS,
     });
-    console.log("Session 이슈 프로젝트 연동 완료");
+    console.log("Session Goal 프로젝트 연동 완료");
 
-    for (const { data, issue } of createdWeekIssues) {
+    for (const { data, issue } of createdWeekGoals) {
       await syncIssueToProject({
         github,
-        projectId: PROJECT_ID,
+        projectId: PROJECT_FIELD_ID,
         contentId: issue.node_id,
         startDateFieldId: START_DATE_FIELD_ID,
         endDateFieldId: END_DATE_FIELD_ID,
         startDate: data.date.start,
         endDate: data.date.end,
-        statusFieldId: PROJECT_STATUS_ID,
-        statusOptionId: PROJECT_STATUS_OPTIONS.TODO,
+        statusFieldId: PROJECT_FIELD_STATUS_ID,
+        statusOptionId: PROJECT_FIELD_STATUS_OPTIONS.TODO,
       });
-      console.log(`Week 이슈 프로젝트 연동 완료: #${issue.number}`);
+      console.log(`Week Goal 프로젝트 연동 완료: #${issue.number}`);
     }
 
     const { data: programmersParent } = await github.rest.issues.get({
@@ -178,13 +170,13 @@ export default async ({ github, context, core }) => {
     await linkSubIssue({
       github,
       parentNodeId: programmersParent.node_id,
-      subIssueId: sessionIssue.node_id,
+      subIssueId: thisSessionGoal.node_id,
     });
 
-    for (const { issue } of createdWeekIssues) {
+    for (const { data, issue } of createdWeekGoals) {
       await linkSubIssue({
         github,
-        parentNodeId: sessionIssue.node_id,
+        parentNodeId: thisSessionGoal.node_id,
         subIssueId: issue.node_id,
       });
     }

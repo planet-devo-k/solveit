@@ -1,20 +1,16 @@
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
-import { getThisWeekPullRequests, requestReviewers } from "./utils/github.js";
+import { getThisWeekPRs, requestReviewers } from "./utils/github.js";
 import { shuffleArray } from "./utils/math.js";
 import sessionData from "../data/session/session_6.json" with { type: "json" };
-import { formatDateKST } from "./utils/date.js";
+import { getKSTDateString } from "./utils/date.js";
 
 export default async ({ github, context, core }) => {
-  const prOwner = context.payload.pull_request.user.login;
-  const prNumber = context.issue.number;
+  const { MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
+  const currentPR = context.payload.pull_request;
+  const prOwner = currentPR.user.login;
+  const prNumber = currentPR.number;
 
   try {
-    const { data: currentPR } = await github.rest.pulls.get({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      pull_number: prNumber,
-    });
-
     if (currentPR.requested_reviewers?.length > 0) {
       const existingReviewers = currentPR.requested_reviewers
         .map((r) => `@${r.login}`)
@@ -25,7 +21,7 @@ export default async ({ github, context, core }) => {
       return;
     }
 
-    const nowStr = formatDateKST(new Date()).replace(/\./g, "-");
+    const nowStr = getKSTDateString(new Date());
     const currentWeekInfo = sessionData.challenges.find(
       (c) => nowStr >= c.date.start && nowStr <= c.date.end,
     );
@@ -35,11 +31,11 @@ export default async ({ github, context, core }) => {
       return;
     }
 
-    const thisWeekPRs = await getThisWeekPullRequests({
+    const thisWeekPRs = await getThisWeekPRs({
       github,
       context,
-      thisMonday: new Date(currentWeekInfo.date.start),
-      thisSaturday: new Date(currentWeekInfo.date.end),
+      startDate: new Date(currentWeekInfo.date.start),
+      endDate: new Date(currentWeekInfo.date.end),
     });
 
     const reviewCounts = {};
@@ -52,11 +48,8 @@ export default async ({ github, context, core }) => {
       });
     });
 
-    console.log("주간 리뷰 배정 현황:", reviewCounts);
-
     let candidates = Object.keys(MEMBERS).filter(
-      (id) =>
-        id !== prOwner && reviewCounts[id] < STUDY_CONFIG.MIN_REVIEWS_REQUIRED,
+      (id) => id !== prOwner && reviewCounts[id] < MIN_REVIEWS_REQUIRED,
     );
 
     if (candidates.length < 2) {
@@ -72,7 +65,6 @@ export default async ({ github, context, core }) => {
       reviewers: selectedReviewers,
     });
 
-    // 디스코드 알림을 위한 데이터 전달
     const selectedReviewersNames = selectedReviewers
       .map((id) => MEMBERS[id] || id)
       .join(", ");
