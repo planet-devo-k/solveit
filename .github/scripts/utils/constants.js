@@ -6,9 +6,6 @@ export const MEMBERS = {
   // gpfksdlrn: "혜란",
 };
 
-/**
- * 스터디 운영 규칙 및 정보
- */
 export const STUDY_CONFIG = {
   PROJECT_FIELD_STATUS_OPTIONS: {
     TODO: "f75ad846",

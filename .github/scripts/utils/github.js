@@ -67,7 +67,7 @@ export const getThisWeekPRs = async ({
 };
 
 /**
- * 이슈를 프로젝트 보드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
+ * 이슈를 프로젝트 필드에 연결하고 관련 필드(날짜, 상태, 담당자, 마일스톤)를 동기화합니다.
  */
 export const syncIssueToProject = async ({
   github,
@@ -112,7 +112,7 @@ export const syncIssueToProject = async ({
 };
 
 /**
- * 리뷰
+ * Review
  */
 export const requestReviewers = async ({
   github,

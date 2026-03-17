@@ -6,29 +6,29 @@ on:
     paths:
       - ".github/data/session/session_*.json"
 
+permissions:
+  contents: read
+  issues: write
+  repository-projects: write
+
 jobs:
   create-issues:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      issues: write
-      repository-projects: write
-
     env:
-      PROJECT_FIELD_ID: ${{ secrets.PROJECT_FIELD_ID }}
-      PROJECT_FIELD_STATUS_ID: ${{ secrets.PROJECT_FIELD_STATUS_ID }}
-      START_DATE_FIELD_ID: ${{ secrets.START_DATE_FIELD_ID }}
-      END_DATE_FIELD_ID: ${{ secrets.END_DATE_FIELD_ID }}
-      SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_tracks.js
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: run JS script
+      - name: run create_goal_tracks script
         uses: actions/github-script@v7
+        env:
+          PROJECT_FIELD_ID: ${{ secrets.PROJECT_FIELD_ID }}
+          PROJECT_FIELD_STATUS_ID: ${{ secrets.PROJECT_FIELD_STATUS_ID }}
+          START_DATE_FIELD_ID: ${{ secrets.START_DATE_FIELD_ID }}
+          END_DATE_FIELD_ID: ${{ secrets.END_DATE_FIELD_ID }}
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_tracks.js
         with:
           github-token: ${{ secrets.GH_PAT_PLANET_DEVO_K }}
           script: |
