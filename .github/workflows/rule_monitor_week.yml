@@ -62,7 +62,7 @@ jobs:
                   fields: [
                     {
                       name: "\u200B",
-                      value: `\`\`\`\n${data.incompleteTable}\n\`\`\``, 
+                      value: `${data.incompleteTable}`, 
                       inline: false
                     }
                   ],
