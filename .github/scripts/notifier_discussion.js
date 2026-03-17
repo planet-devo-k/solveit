@@ -1,9 +1,9 @@
 import { sendDiscord } from "./utils/discord.js";
 
-export default async ({ github, context, core, discussion }) => {
+export default async ({ github, context, core, data }) => {
   try {
-    const target = discussion || context.payload.discussion;
-    const title = target?.title || (discussion ? "Bot" : "User");
+    const target = data.discussion || context.payload.discussion;
+    const title = target?.title || (data.discussion ? "Bot" : "User");
     const author = target?.user?.login || "User";
     const url =
       target?.html_url ||
