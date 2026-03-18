@@ -13,11 +13,14 @@ export default async ({ github, context, core }) => {
   try {
     if (currentPR.requested_reviewers?.length > 0) {
       const existingReviewers = currentPR.requested_reviewers
-        .map((r) => MEMBERS[r.login] || r.login)
+        .map((r) => {
+          const member = MEMBERS.find((m) => m.githubId === r.login);
+          return member ? member.name : r.login;
+        })
         .join(", ");
 
       console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
-      return existingReviewers;
+      return { reviewers: existingReviewers };
     }
 
     const nowStr = getKSTDateString(new Date());
@@ -38,7 +41,7 @@ export default async ({ github, context, core }) => {
     });
 
     const reviewCounts = {};
-    Object.keys(MEMBERS).forEach((id) => (reviewCounts[id] = 0));
+    MEMBERS.forEach((m) => (reviewCounts[m.githubId] = 0));
 
     thisWeekPRs.forEach((pr) => {
       (pr.requested_reviewers || []).forEach((reviewer) => {
@@ -47,15 +50,19 @@ export default async ({ github, context, core }) => {
       });
     });
 
-    let candidates = Object.keys(MEMBERS).filter(
-      (id) => id !== prOwner && reviewCounts[id] < MIN_REVIEWS_REQUIRED,
-    );
+    let candidates = MEMBERS.filter(
+      (m) =>
+        m.githubId !== prOwner &&
+        reviewCounts[m.githubId] < MIN_REVIEWS_REQUIRED,
+    ).map((m) => m.githubId);
 
     if (candidates.length < 2) {
-      candidates = Object.keys(MEMBERS).filter((id) => id !== prOwner);
+      candidates = MEMBERS.filter((m) => m.githubId !== prOwner).map(
+        (m) => m.githubId,
+      );
     }
 
-    const selectedReviewers = shuffleArray(candidates).slice(0, 2);
+    const selectedReviewers = shuffleArray(candidates).slice(0, 10);
 
     await requestReviewers({
       github,
@@ -64,13 +71,16 @@ export default async ({ github, context, core }) => {
       reviewers: selectedReviewers,
     });
 
-    const selectedReviewersNames = selectedReviewers
-      .map((id) => MEMBERS[id] || id)
-      .join(", ");
+    const selectedReviewersMention = selectedReviewers
+      .map((githubId) => {
+        const member = MEMBERS.find((m) => m.githubId === githubId);
+        return member ? `<@${member.discordId}>` : githubId;
+      })
+      .join(" ");
 
-    console.log(`리뷰어 배정 완료: ${selectedReviewersNames}`);
+    console.log(`리뷰어 배정 완료: ${selectedReviewers}`);
 
-    return selectedReviewersNames;
+    return { reviewers: selectedReviewersMention };
   } catch (error) {
     console.error("리뷰어 배정 프로세스 중 에러:", error.message);
     core.setFailed(error.message);

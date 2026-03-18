@@ -85,9 +85,9 @@ export default async ({ github, context, core }) => {
       milestone: Number(PROGRAMMERS_MILESTONE_ID),
     });
 
-    const membersWeeklyChecklist = Object.values(MEMBERS)
-      .map((name) => `- [ ] ${name}`)
-      .join("\n");
+    const membersWeeklyChecklist = MEMBERS.map(
+      (member) => `- [ ] ${member.name}`,
+    ).join("\n");
 
     const weeksToCreate = sessionData.challenges.slice(0, 10);
     const createdWeekGoals = [];

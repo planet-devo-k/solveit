@@ -41,10 +41,11 @@ export default async ({ github, context, core }) => {
     console.log(`이번주 PR 개수 = ${thisWeekPRs.length}`);
 
     const memberStatus = {};
-    const memberIds = Object.keys(MEMBERS);
-    memberIds.forEach((id) => {
+    MEMBERS.forEach((member) => {
+      const id = member.githubId;
       memberStatus[id] = {
-        name: MEMBERS[id],
+        name: member.name,
+        discordId: member.discordId,
         submitted: false,
         prUrl: "",
         reviewPrCount: 0,
@@ -86,6 +87,7 @@ export default async ({ github, context, core }) => {
       }),
     );
 
+    const memberIds = MEMBERS.map((m) => m.githubId);
     memberIds.forEach((id) => {
       const status = memberStatus[id];
       if (status.reviewPrCount >= MIN_REVIEWS_REQUIRED) {
@@ -169,9 +171,15 @@ export default async ({ github, context, core }) => {
     }
 
     console.log("주간 모니터링 보고 완료");
+
+    const alertMention = incompleteMembers
+      .map((id) => `<@${memberStatus[id].discordId}>`)
+      .join(" ");
+
     return {
       incompleteTable: discordIncompleteAlertTable,
       reportData: thisWeekReportResult,
+      alertMention: alertMention,
     };
   } catch (error) {
     console.error("모니터링 프로세스 중 에러 발생:", error.message);

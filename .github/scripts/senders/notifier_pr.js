@@ -1,4 +1,4 @@
-import { sendDiscord } from "./utils/discord.js";
+import { sendDiscord } from "../utils/discord.js";
 
 export default async ({ github, context, core, data }) => {
   try {
@@ -6,7 +6,10 @@ export default async ({ github, context, core, data }) => {
     const reviewers = data.reviewers || "리뷰어 지정 중...";
 
     const discordPayload = {
-      content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
+      content: `새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요. ${reviewers}`,
+      allowed_mentions: {
+        parse: ["everyone", "users"],
+      },
       embeds: [
         {
           title: "NEW PR\n━━━━━━━━━━━━━━━━━━━━━━",

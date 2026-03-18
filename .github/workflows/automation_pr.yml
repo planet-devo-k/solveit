@@ -33,11 +33,11 @@ jobs:
         env:
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_PR }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/notifier_pr.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_pr.js
           RESULT_DATA: ${{ steps.assign_step.outputs.result }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { default: notify } = await import(process.env.SCRIPT_FULL_PATH);
             const data = JSON.parse(process.env.RESULT_DATA);
-            await notify({ github, context, core, data: { reviewers: data } });
+            await notify({ github, context, core, data });

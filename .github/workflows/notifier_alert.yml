@@ -1,0 +1,30 @@
+name: Notifier Alert (Daily 7PM)
+
+on:
+  schedule:
+    - cron: "0 10 * * 0" # KST 매주 일요일 오후 7시
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  discussions: read
+  pull-requests: read
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: send discord notification
+        uses: actions/github-script@v7
+        env:
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_ALERT }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN_ALERT }}
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_alert.js
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { default: alert } = await import(process.env.SCRIPT_FULL_PATH);
+            await alert({ github, context, core, data: {} });

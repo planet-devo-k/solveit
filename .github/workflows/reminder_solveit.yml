@@ -23,7 +23,7 @@ jobs:
         env:
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_SOLVEIT }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN_REMINDER }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/reminder_solveit.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/reminder_solveit.js
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

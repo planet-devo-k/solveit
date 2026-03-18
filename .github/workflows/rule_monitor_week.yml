@@ -37,35 +37,12 @@ jobs:
         if: steps.monitor_step.outputs.discussion != 'null' && steps.monitor_step.outputs.result != ''
         uses: actions/github-script@v7
         env:
-          DISCORD_CHANNEL_ID_ALERT: ${{ secrets.DISCORD_CHANNEL_ID_ALERT }}
-          DISCORD_CHANNEL_ID_DISCUSSION: ${{ secrets.DISCORD_CHANNEL_ID_DISCUSSION }}
-          BOT_TOKEN_ALERT: ${{ secrets.BOT_TOKEN_ALERT }}
-          BOT_TOKEN_NOTIFIER: ${{ secrets.BOT_TOKEN_NOTIFIER }}
-          NOTIFIER_DISCUSSION_PATH: ${{ github.workspace }}/.github/scripts/notifier_discussion.js
-          NOTIFIER_ALERT_PATH: ${{ github.workspace }}/.github/scripts/notifier_alert.js
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_DISCUSSION }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/notifier_discussion.js
           RESULT_DATA: ${{ steps.monitor_step.outputs.result}}
         with:
           script: |
             const data = JSON.parse(process.env.RESULT_DATA);
-
-            // 1. 미제출자 알림 (Alert Notifier 사용)
-            if (data.incompleteTable) {
-              process.env.DISCORD_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID_ALERT;
-              process.env.BOT_TOKEN = process.env.BOT_TOKEN_ALERT;
-              const { default: alert } = await import(process.env.NOTIFIER_ALERT_PATH);
-              
-              await alert({
-                github, context, core,
-                data: { 
-                  incompleteTable: data.incompleteTable 
-                }
-              });
-            }
-
-            // 2. 주간 리포트 알림 (Discussion Notifier 사용)
-            if (data.reportData) {
-              process.env.DISCORD_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID_DISCUSSION;
-              process.env.BOT_TOKEN = process.env.BOT_TOKEN_NOTIFIER;
-              const { default: notifyReport } = await import(process.env.NOTIFIER_DISCUSSION_PATH);
-              await notifyReport({ github, context, core, data: data.reportData });
-            }
+            const { default: notifyReport } = await import(process.env.SCRIPT_FULL_PATH);
+            await notifyReport({ github, context, core, data: data.reportData });

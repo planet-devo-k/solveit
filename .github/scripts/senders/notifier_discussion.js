@@ -1,4 +1,4 @@
-import { sendDiscord } from "./utils/discord.js";
+import { sendDiscord } from "../utils/discord.js";
 
 export default async ({ github, context, core, data = {} }) => {
   try {
@@ -13,8 +13,11 @@ export default async ({ github, context, core, data = {} }) => {
 
     const discordPayload = {
       content: isReport
-        ? "스터디 리포트가 발행되었습니다."
-        : "새로운 게시물이 올라왔어요. 함께 확인해봐요.",
+        ? `@everyone 스터디 리포트가 발행되었습니다.`
+        : `@everyone 새로운 게시물이 올라왔어요. 함께 확인해봐요.`,
+      allowed_mentions: {
+        parse: ["everyone", "users"],
+      },
       embeds: [
         {
           title: `${isReport ? "NEW REPORT" : "NEW POST"}\n━━━━━━━━━━━━━━━━━━━━━━`,

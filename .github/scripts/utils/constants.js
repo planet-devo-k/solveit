@@ -1,10 +1,30 @@
-export const MEMBERS = {
-  sgoldenbird: "시은",
-  pappaya109: "수진",
-  yuj2n: "유진",
-  "Insung-Jo": "인성",
-  // gpfksdlrn: "혜란",
-};
+export const MEMBERS = [
+  {
+    name: "시은",
+    githubId: "sgoldenbird",
+    discordId: "1235595153142710372",
+  },
+  {
+    name: "수진",
+    githubId: "pappaya109",
+    discordId: "347010234562379786",
+  },
+  {
+    name: "유진",
+    githubId: "yuj2n",
+    discordId: "392655134116806676",
+  },
+  {
+    name: "인성",
+    githubId: "Insung-Jo",
+    discordId: "1337108063793975328",
+  },
+  {
+    name: "혜란",
+    githubId: "gpfksdlrn",
+    discordId: "395167554185854977",
+  },
+];
 
 export const STUDY_CONFIG = {
   PROJECT_FIELD_STATUS_OPTIONS: {

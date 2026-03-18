@@ -17,7 +17,6 @@ export default async ({ github, context, core }) => {
     const nowStrDots = getKSTDateString(new Date());
     const sessionStart = new Date(sessionData.date.start);
     const sessionEnd = new Date(sessionData.date.end);
-    const memberIds = Object.keys(MEMBERS);
     const weeks = sessionData.challenges.map((c) => c.week);
 
     if (
@@ -46,9 +45,12 @@ export default async ({ github, context, core }) => {
 
     const reportData = {};
 
-    memberIds.forEach((id) => {
-      reportData[id] = {
-        name: MEMBERS[id],
+    MEMBERS.forEach((member) => {
+      const githubId = member.githubId;
+
+      reportData[githubId] = {
+        name: member.name,
+        discordId: member.discordId,
         weeks: {},
         totalPRs: 0,
         totalReviews: 0,
@@ -57,9 +59,9 @@ export default async ({ github, context, core }) => {
       sessionData.challenges.forEach((challenge) => {
         const w = challenge.week;
         const absentees = challenge.absentees || [];
-        const isAbsent = absentees.includes(id);
+        const isAbsent = absentees.includes(githubId);
 
-        reportData[id].weeks[w] = {
+        reportData[githubId].weeks[w] = {
           pr: false,
           reviews: 0,
           isAbsent: isAbsent,
@@ -145,7 +147,10 @@ export default async ({ github, context, core }) => {
       },
     };
 
-    const markdownTable = createMarkdownTable(memberIds, tableConfig);
+    const markdownTable = createMarkdownTable(
+      MEMBERS.map((m) => m.githubId),
+      tableConfig,
+    );
     const reportTitle = `\`Session${sessionData.id}\` 세션 활동 리포트`;
     const reportBody = `## THIS SESSION REPORT\n\n${markdownTable}\n\n집계 시각: ${getKSTDateString(new Date())}(KST)\n\n수고하셨습니다!`;
 
