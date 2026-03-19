@@ -13,10 +13,10 @@ export default async ({ github, context, core, data = {} }) => {
 
     const discordPayload = {
       content: isReport
-        ? `@everyone 스터디 리포트가 발행되었습니다.`
-        : `@everyone 새로운 게시물이 올라왔어요. 함께 확인해봐요.`,
+        ? `@member 스터디 리포트가 발행되었습니다.`
+        : `@member 새로운 게시물이 올라왔어요. 함께 확인해봐요.`,
       allowed_mentions: {
-        parse: ["everyone", "users"],
+        parse: ["everyone", "roles", "users"],
       },
       embeds: [
         {
