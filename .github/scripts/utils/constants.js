@@ -27,15 +27,26 @@ export const MEMBERS = [
 ];
 
 export const STUDY_CONFIG = {
-  PROJECT_FIELD_STATUS_OPTIONS: {
+  RULES: {
+    WEEKS_PER_SESSION: 10,
+    MIN_REVIEWS_REQUIRED: 2,
+  },
+  URL: {
+    PROGRAMMERS_BASE:
+      "https://school.programmers.co.kr/learn/courses/30/lessons",
+  },
+};
+
+export const DISCORD_CONFIG = {
+  ROLE: {
+    MEMBER_ID: "1483764477827485747",
+  },
+};
+
+export const GITHUB_CONFIG = {
+  PROJECT_FIELD_STATUS: {
     TODO: "f75ad846",
     IN_PROGRESS: "47fc9ee4",
     DONE: "98236657",
   },
-  WEEKS_PER_SESSION: 10,
-  MIN_REVIEWS_REQUIRED: 2,
-  PROGRAMMERS_ISSUE_NUMBER: 143,
-  PROGRAMMERS_MILESTONE_ID: 1,
-  PROGRAMMERS_BASE_URL:
-    "https://school.programmers.co.kr/learn/courses/30/lessons",
 };

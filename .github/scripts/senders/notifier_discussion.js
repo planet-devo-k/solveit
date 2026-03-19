@@ -1,4 +1,5 @@
 import { sendDiscord } from "../utils/discord.js";
+import { DISCORD_CONFIG } from "../utils/constants.js";
 
 export default async ({ github, context, core, data = {} }) => {
   try {
@@ -10,11 +11,12 @@ export default async ({ github, context, core, data = {} }) => {
       "https://github.com/planet-devo-k/solveit/discussions";
     const category = data?.category?.name || "General";
     const isReport = category.toLowerCase().includes("report") || !!data?.title;
+    const mention = `<@&${DISCORD_CONFIG.ROLE.MEMBER_ID}>`;
 
     const discordPayload = {
       content: isReport
-        ? `@member 스터디 리포트가 발행되었습니다.`
-        : `@member 새로운 게시물이 올라왔어요. 함께 확인해봐요.`,
+        ? `${mention} 스터디 리포트가 발행되었습니다.`
+        : `${mention} 새로운 게시물이 올라왔어요. 함께 확인해봐요.`,
       allowed_mentions: {
         parse: ["everyone", "roles", "users"],
       },

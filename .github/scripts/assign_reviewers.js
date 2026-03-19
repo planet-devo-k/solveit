@@ -5,7 +5,8 @@ import { shuffleArray } from "./utils/math.js";
 import { getKSTDateString } from "./utils/date.js";
 
 export default async ({ github, context, core }) => {
-  const { MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
+  const { RULES } = STUDY_CONFIG;
+  const { MIN_REVIEWS_REQUIRED } = RULES;
   const currentPR = context.payload.pull_request;
   const prOwner = currentPR.user.login;
   const prNumber = currentPR.number;

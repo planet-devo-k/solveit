@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import sessionData from "../data/session/session_6.json" with { type: "json" };
-import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
+import { MEMBERS, STUDY_CONFIG, GITHUB_CONFIG } from "./utils/constants.js";
 import {
   removeYamlFrontmatter,
   replacePlaceholders,
@@ -19,13 +19,10 @@ export default async ({ github, context, core }) => {
     START_DATE_FIELD_ID,
     END_DATE_FIELD_ID,
   } = process.env;
-  const {
-    PROJECT_FIELD_STATUS_OPTIONS,
-    WEEKS_PER_SESSION,
-    PROGRAMMERS_ISSUE_NUMBER,
-    PROGRAMMERS_MILESTONE_ID,
-    PROGRAMMERS_BASE_URL,
-  } = STUDY_CONFIG;
+
+  const { RULES, URL } = STUDY_CONFIG;
+  const { PROGRAMMERS_BASE } = URL;
+  const { PROJECT_FIELD_STATUS, MILESTONE, ISSUE } = GITHUB_CONFIG;
 
   const ASSIGNEE_ID = "sgoldenbird";
   const SESSION_ID = sessionData.id;
@@ -47,7 +44,7 @@ export default async ({ github, context, core }) => {
   const levelLabels = sessionData.levels.map((lvl) => `level${lvl}`);
 
   const challengeLink = (c) => {
-    return `[${c.name}](${PROGRAMMERS_BASE_URL}/${c.id})`;
+    return `[${c.name}](${PROGRAMMERS_BASE}/${c.id})`;
   };
 
   try {
@@ -67,7 +64,7 @@ export default async ({ github, context, core }) => {
     const sessionBody = replacePlaceholders(
       removeYamlFrontmatter(sessionTemplate),
       {
-        duration: WEEKS_PER_SESSION,
+        duration: RULES.WEEKS_PER_SESSION,
         start_date: sessionData.date.start,
         end_date: sessionData.date.end,
         levels: sessionData.levels.join(" and "),
@@ -82,7 +79,7 @@ export default async ({ github, context, core }) => {
       body: sessionBody,
       assignees: [ASSIGNEE_ID],
       labels: ["goal", "programmers", "session", ...levelLabels],
-      milestone: Number(PROGRAMMERS_MILESTONE_ID),
+      milestone: Number(MILESTONE.PROGRAMMERS_ID),
     });
 
     const membersWeeklyChecklist = MEMBERS.map(
@@ -135,7 +132,7 @@ export default async ({ github, context, core }) => {
       startDate: sessionData.date.start,
       endDate: sessionData.date.end,
       statusFieldId: PROJECT_FIELD_STATUS_ID,
-      statusOptionId: PROJECT_FIELD_STATUS_OPTIONS.IN_PROGRESS,
+      statusOptionId: PROJECT_FIELD_STATUS.IN_PROGRESS,
     });
     console.log("Session Goal 프로젝트 연동 완료");
 
@@ -149,7 +146,7 @@ export default async ({ github, context, core }) => {
         startDate: data.date.start,
         endDate: data.date.end,
         statusFieldId: PROJECT_FIELD_STATUS_ID,
-        statusOptionId: PROJECT_FIELD_STATUS_OPTIONS.TODO,
+        statusOptionId: PROJECT_FIELD_STATUS.TODO,
       });
       console.log(`Week Goal 프로젝트 연동 완료: #${goal.number}`);
     }
@@ -157,7 +154,7 @@ export default async ({ github, context, core }) => {
     const { data: programmersParent } = await github.rest.issues.get({
       owner: context.repo.owner,
       repo: context.repo.repo,
-      issue_number: PROGRAMMERS_ISSUE_NUMBER,
+      issue_number: ISSUE.PROGRAMMERS_NUMBER,
     });
 
     await linkSubIssue({

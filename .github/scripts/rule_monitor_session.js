@@ -11,7 +11,8 @@ import {
 } from "./utils/github.js";
 
 export default async ({ github, context, core }) => {
-  const { MIN_REVIEWS_REQUIRED } = STUDY_CONFIG;
+  const { RULES } = STUDY_CONFIG;
+  const { MIN_REVIEWS_REQUIRED } = RULES;
 
   try {
     const nowStrDots = getKSTDateString(new Date());

@@ -1,11 +1,14 @@
+import { DISCORD_CONFIG } from "../utils/constants.js";
 import { sendDiscord } from "../utils/discord.js";
 
 export default async ({ github, context, core }) => {
+  const mention = `<@&${DISCORD_CONFIG.ROLE.MEMBER_ID}>`;
+
   try {
     const discordPayload = {
-      content: "@everyone 함께 배우며 성장하는 시간, 이따 만나요!",
+      content: `${mention} 함께 배우며 성장하는 시간, 이따 만나요!`,
       allowed_mentions: {
-        parse: ["everyone", "users"],
+        parse: ["everyone", "roles", "users"],
       },
       embeds: [
         {

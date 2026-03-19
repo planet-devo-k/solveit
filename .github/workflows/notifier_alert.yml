@@ -1,4 +1,4 @@
-name: Notifier Alert (Daily 7PM)
+name: Notifier Alert
 
 on:
   schedule:
