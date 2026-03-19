@@ -1,11 +1,17 @@
-<!-- <p align="center">
+<!-- 
+<p align="center">
   <img src="./assets/solveit_banner.jpg" alt="solveit banner" width="800" />
-</p> -->
+</p> 
+-->
+
+<p align="right">
+  <a href="https://discord.gg/8vn2pZ6p">
+    <img src="https://img.shields.io/discord/1374753887902498929?color=7289DA&label=Join%20Community&logo=discord&logoColor=white&style=for-the-badge" alt="Discord Join">
+  </a>
+</p>
 
 <h1 align="center">SOLVEIT</h1>
-
 <p align="center">우리의 답은 하나가 아니야 — 코딩 테스트, 우리 함께 Solve It!</p>
-
 
 
 # Introduction
