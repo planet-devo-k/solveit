@@ -1,7 +1,6 @@
 function solution(s) {
-  let answer = 0;
-  if (s.length % 2 != 0) answer = Math.round(s.length / 2);
-  return s.length % 2 != 0
-    ? s[answer - 1]
-    : s.slice(s.length / 2 - 1, s.length / 2 + 1);
+  const len = s.length;
+  const mid = Math.floor(len / 2);
+
+  return len % 2 !== 0 ? s[mid] : s.slice(mid - 1, mid + 1);
 }
