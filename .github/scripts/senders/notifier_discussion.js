@@ -3,14 +3,15 @@ import { DISCORD_CONFIG } from "../utils/constants.js";
 
 export default async ({ github, context, core, data = {} }) => {
   try {
-    const title = data?.title || "NEW POST";
-    const author = data?.user?.login || "Bot";
+    const targetData = data.reportData || data;
+    const title = targetData?.title || "NEW POST";
+    const author = targetData?.user?.login || "Bot";
     const url =
-      data?.html_url ||
-      data?.url ||
+      targetData?.html_url ||
+      targetData?.url ||
       "https://github.com/planet-devo-k/solveit/discussions";
-    const category = data?.category?.name || "General";
-    const isReport = category.toLowerCase().includes("report") || !!data?.title;
+    const category = targetData?.category?.name || "General";
+    const isReport = category.toLowerCase().includes("report");
     const mention = `<@&${DISCORD_CONFIG.ROLE.MEMBER_ID}>`;
 
     const discordPayload = {

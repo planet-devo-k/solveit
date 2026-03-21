@@ -45,4 +45,4 @@ jobs:
           script: |
             const data = JSON.parse(process.env.RESULT_DATA);
             const { default: notifyReport } = await import(process.env.SCRIPT_FULL_PATH);
-            await notifyReport({ github, context, core, data: data.reportData });
+            await notifyReport({ github, context, core, data: data });

@@ -4,11 +4,15 @@ export default async ({ github, context, core, data }) => {
   try {
     const pr = data.pr || context.payload.pull_request;
     const reviewers = data.reviewers || "리뷰어 지정 중...";
+    let mention = reviewers;
+    if (Array.isArray(reviewers) && reviewers.length > 0) {
+      mention = reviewers.map((m) => `<@${m.discordId}>`).join(" ");
+    }
 
     const discordPayload = {
-      content: `새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요. ${reviewers}`,
+      content: "새로운 PR이 생성되었습니다. 코드 리뷰가 기다리고 있어요.",
       allowed_mentions: {
-        parse: ["everyone", "users"],
+        parse: ["everyone", "roles", "users"],
       },
       embeds: [
         {
@@ -19,7 +23,7 @@ export default async ({ github, context, core, data }) => {
             { name: "작성자", value: pr.user.login, inline: true },
             {
               name: "리뷰어",
-              value: reviewers,
+              value: `${mention}`,
               inline: true,
             },
           ],

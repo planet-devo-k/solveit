@@ -1,26 +1,26 @@
 export const MEMBERS = [
   {
-    name: "시은",
+    name: "송시은",
     githubId: "sgoldenbird",
     discordId: "1235595153142710372",
   },
   {
-    name: "수진",
+    name: "손수진",
     githubId: "pappaya109",
     discordId: "347010234562379786",
   },
   {
-    name: "유진",
+    name: "전유진",
     githubId: "yuj2n",
     discordId: "392655134116806676",
   },
   {
-    name: "인성",
+    name: "조인성",
     githubId: "Insung-Jo",
     discordId: "1337108063793975328",
   },
   {
-    name: "혜란",
+    name: "문혜란",
     githubId: "gpfksdlrn",
     discordId: "395167554185854977",
   },

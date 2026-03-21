@@ -21,7 +21,7 @@ export default async ({ github, context, core }) => {
         .join(", ");
 
       console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
-      return { reviewers: existingReviewers };
+      return null;
     }
 
     const nowStr = getKSTDateString(new Date());
@@ -55,33 +55,26 @@ export default async ({ github, context, core }) => {
       (m) =>
         m.githubId !== prOwner &&
         reviewCounts[m.githubId] < MIN_REVIEWS_REQUIRED,
-    ).map((m) => m.githubId);
+    );
 
     if (candidates.length < 2) {
-      candidates = MEMBERS.filter((m) => m.githubId !== prOwner).map(
-        (m) => m.githubId,
-      );
+      candidates = MEMBERS.filter((m) => m.githubId !== prOwner);
     }
 
-    const selectedReviewers = shuffleArray(candidates).slice(0, 10);
+    const selectedReviewers = shuffleArray(candidates).slice(0, 2);
+
+    const selectedReviewersGithubId = selectedReviewers.map((m) => m.githubId);
 
     await requestReviewers({
       github,
       context,
       pullNumber: prNumber,
-      reviewers: selectedReviewers,
+      reviewers: selectedReviewersGithubId,
     });
 
-    const selectedReviewersMention = selectedReviewers
-      .map((githubId) => {
-        const member = MEMBERS.find((m) => m.githubId === githubId);
-        return member ? `<@${member.discordId}>` : githubId;
-      })
-      .join(" ");
+    console.log(`리뷰어 배정 완료: ${selectedReviewersGithubId}`);
 
-    console.log(`리뷰어 배정 완료: ${selectedReviewers}`);
-
-    return { reviewers: selectedReviewersMention };
+    return { reviewers: selectedReviewers };
   } catch (error) {
     console.error("리뷰어 배정 프로세스 중 에러:", error.message);
     core.setFailed(error.message);

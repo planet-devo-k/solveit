@@ -3,7 +3,14 @@ import { sendDiscord } from "../utils/discord.js";
 export default async ({ github, context, core, data = {} }) => {
   try {
     const incompleteList = data.incompleteTable;
-    const mention = data.alertMention;
+    const incompleteMembers = data.incompleteMembers || [];
+
+    if (!incompleteList || incompleteMembers.length === 0) {
+      console.log("모두 과제를 완료하여 미수행자 알림을 생략합니다.");
+      return;
+    }
+
+    const mention = incompleteMembers.map((m) => `<@${m.discordId}>`).join(" ");
 
     const discordPayload = {
       content: `마감 1시간 전! 아직 PR, 리뷰 안 하신 분들 체크해주세요.\n${mention}`,

@@ -43,9 +43,9 @@ export default async ({ github, context, core }) => {
 
     const memberStatus = {};
     MEMBERS.forEach((member) => {
-      const id = member.githubId;
-      memberStatus[id] = {
+      memberStatus[member.githubId] = {
         name: member.name,
+        githubId: member.githubId,
         discordId: member.discordId,
         submitted: false,
         prUrl: "",
@@ -125,14 +125,16 @@ export default async ({ github, context, core }) => {
       };
     };
 
-    const incompleteMembers = memberIds.filter((id) => {
-      const s = memberStatus[id];
-      return !(s.submitted && s.hasMetReviewQuota);
-    });
+    const incompleteMembers = Object.values(memberStatus).filter(
+      (m) => !(m.submitted && m.hasMetReviewQuota),
+    );
 
     const discordIncompleteAlertTable =
       incompleteMembers.length > 0
-        ? createDiscordTable(incompleteMembers, getTableConfig(false))
+        ? createDiscordTable(
+            incompleteMembers.map((m) => m.githubId),
+            getTableConfig(false),
+          )
         : null;
 
     console.log("이번주 리포트 생성 중...");
@@ -173,14 +175,10 @@ export default async ({ github, context, core }) => {
 
     console.log("주간 모니터링 보고 완료");
 
-    const alertMention = incompleteMembers
-      .map((id) => `<@${memberStatus[id].discordId}>`)
-      .join(" ");
-
     return {
       incompleteTable: discordIncompleteAlertTable,
       reportData: thisWeekReportResult,
-      alertMention: alertMention,
+      incompleteMembers: incompleteMembers,
     };
   } catch (error) {
     console.error("모니터링 프로세스 중 에러 발생:", error.message);
