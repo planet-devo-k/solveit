@@ -2,7 +2,7 @@ name: Automation PR
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened]
 
 permissions:
   pull-requests: write

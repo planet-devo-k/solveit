@@ -7,6 +7,8 @@ import { getKSTDateString } from "./utils/date.js";
 export default async ({ github, context, core }) => {
   const { RULES } = STUDY_CONFIG;
   const { MIN_REVIEWS_REQUIRED } = RULES;
+  const repo = context.repo.repo;
+  const repoOwner = context.repo.owner;
   const currentPR = context.payload.pull_request;
   const prOwner = currentPR.user.login;
   const prNumber = currentPR.number;
@@ -31,7 +33,7 @@ export default async ({ github, context, core }) => {
 
     if (!currentWeekInfo) {
       console.log(`(${nowStr})는 현재 진행 중인 스터디 주차가 아닙니다.`);
-      return;
+      return null;
     }
 
     const thisWeekPRs = await getThisWeekPRs({
@@ -44,24 +46,47 @@ export default async ({ github, context, core }) => {
     const reviewCounts = {};
     MEMBERS.forEach((m) => (reviewCounts[m.githubId] = 0));
 
-    thisWeekPRs.forEach((pr) => {
+    for (const pr of thisWeekPRs) {
+      const reviewersSet = new Set();
+
       (pr.requested_reviewers || []).forEach((reviewer) => {
-        if (reviewCounts[reviewer.login] !== undefined)
-          reviewCounts[reviewer.login]++;
+        reviewersSet.add(reviewer.login);
       });
-    });
 
-    let candidates = MEMBERS.filter(
-      (m) =>
-        m.githubId !== prOwner &&
-        reviewCounts[m.githubId] < MIN_REVIEWS_REQUIRED,
-    );
+      try {
+        const { data: reviews } = await github.rest.pulls.listReviews({
+          owner: repoOwner,
+          repo,
+          pull_number: pr.number,
+        });
 
-    if (candidates.length < 2) {
-      candidates = MEMBERS.filter((m) => m.githubId !== prOwner);
+        reviews.forEach((review) => {
+          if (review.user && review.user.login !== pr.user.login) {
+            reviewersSet.add(review.user.login);
+          }
+        });
+      } catch (error) {
+        console.log(
+          `PR #${pr.number}의 리뷰 목록을 가져오는데 실패했습니다:`,
+          error.message,
+        );
+      }
+
+      reviewersSet.forEach((login) => {
+        if (reviewCounts[login] !== undefined) {
+          reviewCounts[login]++;
+        }
+      });
     }
 
-    const selectedReviewers = shuffleArray(candidates).slice(0, 2);
+    let candidates = MEMBERS.filter((m) => m.githubId !== prOwner);
+
+    candidates = shuffleArray(candidates);
+    candidates.sort(
+      (a, b) => reviewCounts[a.githubId] - reviewCounts[b.githubId],
+    );
+
+    const selectedReviewers = candidates.slice(0, 2);
 
     const selectedReviewersGithubId = selectedReviewers.map((m) => m.githubId);
 
