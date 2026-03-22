@@ -1,0 +1,48 @@
+name: Automation PR
+
+on:
+  pull_request:
+    types: [opened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  pr-tasks:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: run assign_reviewers script
+        id: assign_step # 이 ID가 두 스텝을 이어주는 다리 역할을 합니다.
+        uses: actions/github-script@v7
+        env:
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/assign_reviewers.js
+        with:
+          script: |
+            const { default: assign } = await import(process.env.SCRIPT_FULL_PATH);
+            return await assign({ github, context, core });
+
+      - name: send discord notification
+        if: steps.assign_step.outputs.result != 'null'
+        uses: actions/github-script@v6
+        env:
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_PR }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_pr.js
+          RESULT_DATA: ${{ steps.assign_step.outputs.result }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { default: notify } = await import(process.env.SCRIPT_FULL_PATH);
+            const data = JSON.parse(process.env.RESULT_DATA);
+            await notify({ github, context, core, data });

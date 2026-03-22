@@ -3,6 +3,10 @@
 
 # Node.js dependencies
 node_modules/
+.DS_Store
 
 # Environment variables
 .env
+
+back.yml
+local/
