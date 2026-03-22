@@ -97,7 +97,7 @@ export default async ({ github, context, core }) => {
     });
 
     const getTableConfig = (includeAttendance = false) => {
-      const headers = ["이름", "PR 제출", "리뷰"];
+      const headers = ["이름", "PR 제출", "리뷰(PR 기준)"];
       const paddings = [6, 9, 6];
 
       if (includeAttendance) {

@@ -1,8 +1,7 @@
 name: Rule Monitor Week
 
 on:
-  schedule:
-    - cron: "0 15 * * 6" # UTC 기준 (KST 일요일 0시)
+  schedule: # UTC 기준 (KST 일요일 0시)
     - cron: "0 11 * * 0" # UTC 기준 (KST 일요일 20시)
   workflow_dispatch:
 
@@ -39,7 +38,7 @@ jobs:
         env:
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_DISCUSSION }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/notifier_discussion.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_discussion.js
           RESULT_DATA: ${{ steps.monitor_step.outputs.result}}
         with:
           script: |

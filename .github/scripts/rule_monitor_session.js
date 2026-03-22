@@ -21,11 +21,11 @@ export default async ({ github, context, core }) => {
     const weeks = sessionData.challenges.map((c) => c.week);
 
     if (
-      nowStrDots !== sessionEnd &&
+      nowStrDots !== getKSTDateString(sessionEnd) &&
       context.eventName !== "workflow_dispatch"
     ) {
       console.warn(
-        `오늘은 세션 종료일(${sessionEnd})이 아닙니다. 현재 날짜: ${nowStrDots}. 세션 리포트 생성을 스킵합니다.`,
+        `오늘은 세션 종료일(${getKSTDateString(sessionEnd)})이 아닙니다. 현재 날짜: ${nowStrDots}. 세션 리포트 생성을 스킵합니다.`,
       );
       return;
     }
