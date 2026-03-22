@@ -23,6 +23,7 @@ Check off the problems you solved this week.
 
 - [ ] 제목이 `week1` 형식을 따르고 있나요?
 - [ ] 본인을 Assignee로 지정했나요?
+- [ ] Reviewers를 직접 지정하지 **마세요**. 커스텀 로직으로 자동 배정됩니다.
 - [ ] 관련 라벨(source, difficulty, category 등)을 모두 추가했나요?
 - [ ] Projects에 연결하지 **마세요**.
 - [ ] Milestone에 연결하지 **마세요**.
