@@ -37,16 +37,29 @@ export const STUDY_CONFIG = {
   },
 };
 
+export const GITHUB_CONFIG = {
+  PROJECT_FIELD_STATUS: {
+    TODO: "f75ad846",
+    IN_PROGRESS: "47fc9ee4",
+    DONE: "98236657",
+  },
+};
+
 export const DISCORD_CONFIG = {
   ROLE: {
     MEMBER_ID: "1483764477827485747",
   },
 };
 
-export const GITHUB_CONFIG = {
-  PROJECT_FIELD_STATUS: {
-    TODO: "f75ad846",
-    IN_PROGRESS: "47fc9ee4",
-    DONE: "98236657",
+export const BOT_CONFIG = {
+  TARGET_CHANNEL_ID: "1481651506372673536",
+  MAX_WARNINGS: 5,
+  TIMEOUT: {
+    MODAL_MS: 5 * 60 * 1000,
+    KICK_DELAY_MS: 60 * 1000,
+  },
+  COLORS: {
+    WARNING: "#FFFF00",
+    KICK: "#FF0000",
   },
 };

@@ -1,10 +1,16 @@
-import { REST, Routes, SlashCommandBuilder } from "discord.js";
+import {
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+} from "discord.js";
 import "dotenv/config";
 
 const commands = [
   new SlashCommandBuilder()
     .setName("경고")
     .setDescription("특정 유저에게 경고를 부여하고 확인 버튼을 생성합니다.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addUserOption((option) =>
       option
         .setName("유저")
