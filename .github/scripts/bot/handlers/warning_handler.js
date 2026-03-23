@@ -1,6 +1,4 @@
 import {
-  Client,
-  GatewayIntentBits,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
@@ -10,65 +8,33 @@ import {
   TextInputStyle,
   MessageFlags,
 } from "discord.js";
-import "dotenv/config";
-import { loadWarningData, saveWarningData } from "../utils/warning_manager.js";
-import { BOT_CONFIG } from "../utils/constants.js";
+import {
+  loadWarningData,
+  saveWarningData,
+} from "../../utils/warning_manager.js";
+import {
+  BOT_CONFIG,
+  WARNING_TYPES,
+  KICK_TYPES,
+} from "../../utils/constants.js";
+import { handleKickAndReset } from "./kick_handler.js";
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ],
-});
-
-const handleKickAndReset = async (guild, targetId, reason) => {
-  try {
-    const member = guild.members.cache.get(targetId);
-    if (!member) return;
-
-    await member.kick(reason);
-
-    const warnings = loadWarningData();
-    delete warnings[targetId];
-    saveWarningData(warnings);
-
-    console.log(`추방 완료\n대상: ${targetId}, 사유: ${reason}`);
-  } catch (error) {
-    console.error("추방 처리 중 에러 발생:", error);
-  }
-};
-
-client.once("clientReady", () => {
-  console.log(`${client.user.tag} 서버 관리 봇 가동 시작!`);
-});
-
-client.on("interactionCreate", async (interaction) => {
-  try {
-    if (
-      interaction.isChatInputCommand() &&
-      interaction.commandName === "경고"
-    ) {
-      await handleCommand(interaction);
-    } else if (interaction.isButton()) {
-      await handleButton(interaction);
-    } else if (interaction.isModalSubmit()) {
-      await handleModal(interaction);
-    }
-  } catch (error) {
-    console.error("상호작용 처리 중 전역 에러:", error);
-  }
-});
-
-const handleCommand = async (interaction) => {
-  const targetMember = interaction.options.getMember("유저");
-  if (!targetMember) {
+export const handleCommand = async (interaction, client) => {
+  const targetUser = interaction.options.getUser("유저");
+  if (!targetUser) {
     return interaction.reply({
       content: "유저를 찾을 수 없습니다.",
       flags: [MessageFlags.Ephemeral],
     });
   }
+  const targetMember =
+    interaction.guild.members.cache.get(targetUser.id) ??
+    (await interaction.guild.members.fetch(targetUser.id));
+
+  const warningTypeValue = interaction.options.getString("유형");
+  const warningTypeLabel =
+    WARNING_TYPES.find((w) => w.value === warningTypeValue)?.label ||
+    warningTypeValue;
 
   const userId = targetMember.id;
   const warnings = loadWarningData();
@@ -76,9 +42,11 @@ const handleCommand = async (interaction) => {
 
   warnings[userId] = {
     count: currentCount,
-    message: "",
-    isConfirmed: false,
+    types: [...(warnings[userId]?.types || []), warningTypeValue],
+    messages: [...(warnings[userId]?.messages || [])],
+    isConfirmed: [...(warnings[userId]?.isConfirmed || []), false],
   };
+
   saveWarningData(warnings);
 
   const row = new ActionRowBuilder().addComponents(
@@ -86,7 +54,7 @@ const handleCommand = async (interaction) => {
       .setCustomId(
         `warn_check_${userId}_${currentCount}_${interaction.channelId}`,
       )
-      .setLabel(`클릭`)
+      .setLabel("클릭")
       .setStyle(ButtonStyle.Danger),
   );
 
@@ -99,7 +67,7 @@ const handleCommand = async (interaction) => {
   if (targetChannel) {
     await targetChannel.send(messagePayload);
     await interaction.reply({
-      content: `${targetMember.user.tag}에 대한 경고 버튼이 생성되었습니다. (누적 ${currentCount}회)`,
+      content: `⚠️ ${targetMember.user.tag} ${warningTypeLabel} (누적 ${currentCount}회)`,
       flags: [MessageFlags.Ephemeral],
     });
   } else {
@@ -107,7 +75,7 @@ const handleCommand = async (interaction) => {
   }
 };
 
-const handleButton = async (interaction) => {
+export const handleButton = async (interaction) => {
   const [, , targetId, countStr, adminChannelId] =
     interaction.customId.split("_");
   const count = parseInt(countStr);
@@ -122,10 +90,13 @@ const handleButton = async (interaction) => {
   const warnings = loadWarningData();
   const userData = warnings[targetId] || {
     count: 0,
-    message: "",
-    isConfirmed: false,
+    messages: [],
+    isConfirmed: [],
   };
   const isMaxWarning = count >= BOT_CONFIG.MAX_WARNINGS;
+  const latestType = userData.types?.[count - 1];
+  const warningType = WARNING_TYPES.find((w) => w.value === latestType);
+  const kickType = KICK_TYPES.find((k) => k.value === latestType);
 
   const modal = new ModalBuilder()
     .setCustomId(`warn_modal_${targetId}_${count}_${adminChannelId}`)
@@ -137,27 +108,30 @@ const handleButton = async (interaction) => {
     .setCustomId("warn_reason")
     .setLabel(
       isMaxWarning
-        ? "🚫 추방 조치 안내 (입력 제한시간 5분)"
-        : "⚠️ 스터디 룰 위반에 따른 경고 안내",
+        ? `🚫 ${kickType?.label}` || "🚫 추방 조치 안내 (입력 제한시간 5분)"
+        : `⚠️ ${warningType?.label}` || "⚠️ 스터디 룰 위반 안내",
     )
     .setStyle(TextInputStyle.Paragraph)
-    .setValue(userData.message || "")
+    .setValue(userData.messages?.[count - 1] || "")
     .setPlaceholder(
-      userData.isConfirmed
+      userData.isConfirmed?.[count - 1]
         ? "이미 보고가 완료되었습니다."
         : isMaxWarning
           ? "소명 사유가 있다면 입력하고 제출해 주세요.\n미입력시 확인했음으로 간주합니다.\n추후 재가입이 가능합니다."
           : '"확인했습니다" 또는 소명 사유를 입력하고 제출해 주세요.',
     )
-    .setRequired(!isMaxWarning && !userData.isConfirmed);
+    .setRequired(!isMaxWarning && !userData.isConfirmed?.[count - 1]);
 
   modal.addComponents([new ActionRowBuilder().addComponents(detailInput)]);
   await interaction.showModal(modal);
 
-  if (isMaxWarning && !userData.isConfirmed) {
+  if (isMaxWarning && !userData.isConfirmed?.[count - 1]) {
     setTimeout(() => {
       const currentWarnings = loadWarningData();
-      if (currentWarnings[targetId] && !currentWarnings[targetId].isConfirmed) {
+      if (
+        currentWarnings[targetId] &&
+        !currentWarnings[targetId].isConfirmed?.[count - 1]
+      ) {
         handleKickAndReset(
           interaction.guild,
           targetId,
@@ -168,27 +142,41 @@ const handleButton = async (interaction) => {
   }
 };
 
-const handleModal = async (interaction) => {
+export const handleModal = async (interaction, client) => {
   const [, , targetId, countStr, adminChannelId] =
     interaction.customId.split("_");
   const count = parseInt(countStr);
   const isMaxWarning = count >= BOT_CONFIG.MAX_WARNINGS;
 
   const warnings = loadWarningData();
-  if (warnings[targetId]?.isConfirmed) {
+  if (warnings[targetId]?.isConfirmed?.[count - 1]) {
     return interaction.reply({
-      content: "이미 보고가 완료되었습니다.",
+      content: "이미 전송된 보고입니다.",
       flags: [MessageFlags.Ephemeral],
     });
   }
 
   const userMessage = interaction.fields.getTextInputValue("warn_reason");
 
-  if (warnings[targetId]) {
-    warnings[targetId].message = userMessage;
-    warnings[targetId].isConfirmed = true;
-    saveWarningData(warnings);
-  }
+  warnings[targetId].messages[count - 1] = userMessage;
+  warnings[targetId].isConfirmed[count - 1] = true;
+  saveWarningData(warnings);
+
+  const warningTypeLabel = (() => {
+    const types = warnings[targetId]?.types || [];
+    const countMap = types.reduce((acc, t) => {
+      acc[t] = (acc[t] || 0) + 1;
+      return acc;
+    }, {});
+    return (
+      Object.entries(countMap)
+        .map(([t, c]) => {
+          const label = WARNING_TYPES.find((w) => w.value === t)?.label || t;
+          return c > 1 ? `⚠️ ${label} x${c}` : `⚠️ ${label}`;
+        })
+        .join(", ") || "미분류"
+    );
+  })();
 
   const adminChannel = client.channels.cache.get(adminChannelId);
   if (adminChannel) {
@@ -208,7 +196,11 @@ const handleModal = async (interaction) => {
           inline: true,
         },
         { name: "\u200b", value: `${count}회차`, inline: true },
-        { name: "\u200b", value: `\`\`\`${userMessage || "내용 없음"}\`\`\`` },
+        { name: "\u200b", value: warningTypeLabel },
+        {
+          name: "\u200b",
+          value: `\`\`\`${userMessage || "내용 없음"}\`\`\``,
+        },
       );
 
     await adminChannel.send({ embeds: [reportEmbed] });
@@ -231,5 +223,3 @@ const handleModal = async (interaction) => {
     }, BOT_CONFIG.TIMEOUT.KICK_DELAY_MS);
   }
 };
-
-client.login(process.env.BOT_TOKEN_ALERT);

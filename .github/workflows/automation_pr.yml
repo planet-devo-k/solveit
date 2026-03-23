@@ -2,7 +2,7 @@ name: Automation PR
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}

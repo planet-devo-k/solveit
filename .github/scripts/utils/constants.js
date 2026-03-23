@@ -43,6 +43,12 @@ export const GITHUB_CONFIG = {
     IN_PROGRESS: "47fc9ee4",
     DONE: "98236657",
   },
+  MILESTONE: {
+    PROGRAMMERS_ID: 1,
+  },
+  ISSUE: {
+    PROGRAMMERS_NUMBER: 143,
+  },
 };
 
 export const DISCORD_CONFIG = {
@@ -63,3 +69,46 @@ export const BOT_CONFIG = {
     KICK: "#FF0000",
   },
 };
+
+export const WARNING_TYPES = [
+  { name: "Interaction", value: "interaction", label: "상호작용 미준수" },
+  {
+    name: "Rule Violation",
+    value: "rule_violation",
+    label: "스터디 룰 미준수",
+  },
+  { name: "Conflict", value: "conflict", label: "분쟁" },
+];
+
+export const KICK_TYPES = [
+  {
+    name: "Warning Limit",
+    value: "warning_limit",
+    label: "경고 누적 5회",
+  },
+  {
+    name: "Ghost Member",
+    value: "ghost_member",
+    label: "고스트 멤버 (가입 후 활동 없음)",
+  },
+  {
+    name: "Long Inactive",
+    value: "long_inactive",
+    label: "장기간 비활성 (1년 이상 스터디 미참여)",
+  },
+  {
+    name: "No Contribution",
+    value: "no_contribution",
+    label: "커뮤니티 기여 없음 (1년 이상)",
+  },
+  {
+    name: "No Sharing",
+    value: "no_sharing",
+    label: "학습 정보 공유 없음",
+  },
+  {
+    name: "Absent No Notice",
+    value: "absent_no_notice",
+    label: "사전 고지 없이 잠수",
+  },
+];
