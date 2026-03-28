@@ -82,11 +82,18 @@ export default async ({ github, context, core }) => {
     let candidates = MEMBERS.filter((m) => m.githubId !== prOwner);
 
     candidates = shuffleArray(candidates);
-    candidates.sort(
-      (a, b) => reviewCounts[a.githubId] - reviewCounts[b.githubId],
-    );
+    const grouped = {};
+    candidates.forEach((c) => {
+      const count = reviewCounts[c.githubId];
+      if (!grouped[count]) grouped[count] = [];
+      grouped[count].push(c);
+    });
 
-    const selectedReviewers = candidates.slice(0, 2);
+    const sorted = Object.keys(grouped)
+      .sort((a, b) => a - b)
+      .flatMap((count) => shuffleArray(grouped[count]));
+
+    const selectedReviewers = sorted.slice(0, MIN_REVIEWS_REQUIRED);
 
     const selectedReviewersGithubId = selectedReviewers.map((m) => m.githubId);
 
