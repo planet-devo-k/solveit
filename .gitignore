@@ -1,7 +1,21 @@
+# IDE
 .vscode/
-.env
+ 
+# Dependencies
 node_modules/
+
+# Build
 dist/
-logs/
+ 
+# OS
+.DS_Store
+ 
+# Environment
+.env
+ 
+# Logs
 npm-debug.log
+logs/
+ 
+# Local 
 local/

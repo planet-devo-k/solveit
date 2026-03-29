@@ -1,60 +1,41 @@
 ---
-name: "weekly-goal-tracking"
+name: "goal track week"
 about: "Use this template for using issues as weekly goal tracking items."
 title: "`Week`"
+assignees: "sgoldenbird"
 labels:
   - goal
   - Programmers
-  - level 0
-  - level 1
-assignees: "sgoldenbird"
+  - level0
+  - level1
 ---
 
-## Goal
+# Goal
 
-**Week**: 2026. MON ~ 2026. SUN
+**Week**: {{start_date}} ~ {{end_date}}
 
-**Goal Description**: Solve 3 coding challenges from Programmers Level 0 and Level 1.
+**Description**: Solve 3 coding challenges from Programmers Level {{levels}}.
 
-**Deadline**: 2026. SUN
+**Deadline**: {{end_date}}
 
----
+## This Week Challenges
 
-## Progress
+{{challenges_text}}
 
-### This Week's To-Do List by Participant
+## Status
 
-- **시은**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **수진**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **유진**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
-- **인성**:
-
-  - [ ] Solve `Problem 1`
-  - [ ] Solve `Problem 2`
-  - [ ] Solve
-
----
+{{members_status_checklist}}
 
 ## Checklist
 
-- [ ] All participants have solved all problems.
-- [ ] Each participant’s “This Week’s To-Do List” has been updated.
-- [ ] All related issues have been resolved.
-- [ ] PRs have been created for all problems.
+- [ ] 모든 멤버가 세션의 모든 챌린지를 완료하였습니다.
+- [ ] 각 주차의 챌린지에 대해 PR이 모두 생성되었습니다.
+- [ ] 모든 PR에 대한 리뷰가 완료되었습니다.
+- [ ] 모든 관련 이슈가 해결되었습니다.
+
+<!--
+- [ ] All members have solved all session challenges.
+- [ ] PRs have been created for all challenges.
 - [ ] All PRs have been reviewed.
-- [ ] Any related issues or questions have been shared in Discussions (if applicable).
+- [ ] All related issues have been resolved (if any).
+-->
