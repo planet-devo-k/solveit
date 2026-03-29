@@ -52,7 +52,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN_ALERT);
     console.log("슬래시 명령어 등록 시작...");
     await rest.put(
       Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
+        process.env.BOT_ID_ALERT,
         process.env.GUILD_ID,
       ),
       { body: commands },

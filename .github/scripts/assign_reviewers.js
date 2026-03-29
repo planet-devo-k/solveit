@@ -14,15 +14,17 @@ export default async ({ github, context, core }) => {
   const prNumber = currentPR.number;
 
   try {
-    const { data: existingReviews } = await github.rest.pulls.listReviews({
+    const { data: existingReviewers } = await github.rest.pulls.listReviews({
       owner: repoOwner,
       repo,
       pull_number: prNumber,
     });
 
-    const hasReviews = existingReviews.some((r) => r.user.login !== prOwner);
+    const hasExternalReviewers = existingReviewers.some(
+      (r) => r.user.login !== prOwner,
+    );
 
-    if (currentPR.requested_reviewers?.length > 0 || hasReviews) {
+    if (currentPR.requested_reviewers?.length > 0 || hasExternalReviewers) {
       console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
       return null;
     }
@@ -82,7 +84,6 @@ export default async ({ github, context, core }) => {
 
     let candidates = MEMBERS.filter((m) => m.githubId !== prOwner);
 
-    candidates = shuffleArray(candidates);
     const grouped = {};
     candidates.forEach((c) => {
       const count = reviewCounts[c.githubId];
