@@ -14,14 +14,15 @@ export default async ({ github, context, core }) => {
   const prNumber = currentPR.number;
 
   try {
-    if (currentPR.requested_reviewers?.length > 0) {
-      const existingReviewers = currentPR.requested_reviewers
-        .map((r) => {
-          const member = MEMBERS.find((m) => m.githubId === r.login);
-          return member ? member.name : r.login;
-        })
-        .join(", ");
+    const { data: existingReviews } = await github.rest.pulls.listReviews({
+      owner: repoOwner,
+      repo,
+      pull_number: prNumber,
+    });
 
+    const hasReviews = existingReviews.some((r) => r.user.login !== prOwner);
+
+    if (currentPR.requested_reviewers?.length > 0 || hasReviews) {
       console.log("이미 리뷰어가 배정되어 있어 기존 목록을 유지합니다.");
       return null;
     }
