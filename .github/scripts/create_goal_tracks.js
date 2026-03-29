@@ -86,7 +86,7 @@ export default async ({ github, context, core }) => {
       (member) => `- [ ] ${member.name}`,
     ).join("\n");
 
-    const weeksToCreate = sessionData.challenges.slice(0, 10);
+    const weeksToCreate = sessionData.challenges.slice(0, 1);
     const createdWeekGoals = [];
 
     for (const weekData of weeksToCreate) {
