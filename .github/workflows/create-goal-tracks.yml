@@ -28,7 +28,7 @@ jobs:
           PROJECT_FIELD_STATUS_ID: ${{ secrets.PROJECT_FIELD_STATUS_ID }}
           START_DATE_FIELD_ID: ${{ secrets.START_DATE_FIELD_ID }}
           END_DATE_FIELD_ID: ${{ secrets.END_DATE_FIELD_ID }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create_goal_tracks.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/create-goal-tracks.js
         with:
           github-token: ${{ secrets.GH_PAT_PLANET_DEVO_K }}
           script: |

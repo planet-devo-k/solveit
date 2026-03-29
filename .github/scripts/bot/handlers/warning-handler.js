@@ -11,13 +11,13 @@ import {
 import {
   loadWarningData,
   saveWarningData,
-} from "../../utils/warning_manager.js";
+} from "../../utils/warning-manager.js";
 import {
   BOT_CONFIG,
   WARNING_TYPES,
   KICK_TYPES,
 } from "../../utils/constants.js";
-import { handleKickAndReset } from "./kick_handler.js";
+import { handleKickAndReset } from "./kick-handler.js";
 
 export const handleCommand = async (interaction, client) => {
   const targetUser = interaction.options.getUser("유저");

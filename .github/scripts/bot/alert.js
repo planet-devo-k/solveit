@@ -5,8 +5,8 @@ import {
   handleCommand,
   handleButton,
   handleModal,
-} from "./handlers/warning_handler.js";
-import { handleKickCommand } from "./handlers/kick_handler.js";
+} from "./handlers/warning-handler.js";
+import { handleKickCommand } from "./handlers/kick-handler.js";
 
 const client = new Client({
   intents: [

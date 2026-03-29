@@ -24,7 +24,7 @@ jobs:
         env:
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_DISCUSSION }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_discussion.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier-discussion.js
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

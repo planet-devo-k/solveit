@@ -2,7 +2,7 @@ import { EmbedBuilder, MessageFlags } from "discord.js";
 import {
   loadWarningData,
   saveWarningData,
-} from "../../utils/warning_manager.js";
+} from "../../utils/warning-manager.js";
 import { BOT_CONFIG, KICK_TYPES } from "../../utils/constants.js";
 
 export const handleKickAndReset = async (guild, targetId, type) => {

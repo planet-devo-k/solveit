@@ -1,8 +1,8 @@
-name: Rule Monitor Week
+name: Rule Monitor Session
 
 on:
-  schedule: # UTC 기준 (KST 일요일 0시)
-    - cron: "0 11 * * 0" # UTC 기준 (KST 일요일 20시)
+  schedule:
+    - cron: "0 13 * * 0"
   workflow_dispatch:
 
 permissions:
@@ -21,11 +21,11 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: run rule_monitor_week script
+      - name: run rule_monitor_session script
         id: monitor_step
         uses: actions/github-script@v7
         env:
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/rule_monitor_week.js
+          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/rule-monitor-session.js
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -33,15 +33,15 @@ jobs:
             return await run({ github, context, core });
 
       - name: send discord notification
-        if: steps.monitor_step.outputs.discussion != 'null' && steps.monitor_step.outputs.result != ''
+        if: steps.monitor_step.outputs.discussion_title != 'null' && steps.monitor_step.outputs.result != ''
         uses: actions/github-script@v7
         env:
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID_DISCUSSION }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER }}
-          SCRIPT_FULL_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier_discussion.js
-          RESULT_DATA: ${{ steps.monitor_step.outputs.result}}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN_NOTIFIER}}
+          NOTIFIER_DISCUSSION_PATH: ${{ github.workspace }}/.github/scripts/senders/notifier-discussion.js
+          RESULT_DATA: ${{ steps.monitor_step.outputs.result }}
         with:
           script: |
+            const { default: notifyReport } = await import(process.env.NOTIFIER_DISCUSSION_PATH);
             const data = JSON.parse(process.env.RESULT_DATA);
-            const { default: notifyReport } = await import(process.env.SCRIPT_FULL_PATH);
-            await notifyReport({ github, context, core, data: data });
+            await notifyReport({ github, context, core, data });
