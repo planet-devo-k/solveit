@@ -17,7 +17,7 @@
 
 solveit은 함께 코딩 테스트 문제를 풀고, 리뷰와 피드백을 통해 실력을 키우는 스터디입니다.
 
-📌 **진행 상황**은 [Milestones](https://github.com/front-studium/solveit/milestones)와 [Roadmap](https://github.com/orgs/front-studium/projects/1/views/1)을 참고하세요.
+📌 **진행 상황**은 [Milestones](https://github.com/front-studium/solveit/milestones)와 [Roadmap](https://github.com/orgs/planet-devo-k/projects/1/views/1)을 참고하세요.
 
 - **기간**: 2025.04.03 ~ ING
 - **시간**: 매주 일요일 오후 10시
