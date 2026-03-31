@@ -1,10 +1,11 @@
-import sessionData from "../data/session/session_6.json" with { type: "json" };
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import { getThisWeekPRs, requestReviewers } from "./utils/github.js";
 import { shuffleArray } from "./utils/math.js";
 import { getKSTDateString } from "./utils/date.js";
+import { getLatestSessionData } from "./utils/session.js";
 
 export default async ({ github, context, core }) => {
+  const sessionData = getLatestSessionData();
   const { RULES } = STUDY_CONFIG;
   const { MIN_REVIEWS_REQUIRED } = RULES;
   const repo = context.repo.repo;
@@ -93,7 +94,14 @@ export default async ({ github, context, core }) => {
 
     const sorted = Object.keys(grouped)
       .sort((a, b) => a - b)
-      .flatMap((count) => shuffleArray(grouped[count]));
+      .flatMap((count) => {
+        const s = shuffleArray(grouped[count]);
+        console.log(
+          "shuffled:",
+          s.map((m) => m.name),
+        );
+        return s;
+      });
 
     const selectedReviewers = sorted.slice(0, MIN_REVIEWS_REQUIRED);
 

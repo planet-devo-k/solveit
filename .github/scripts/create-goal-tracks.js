@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import sessionData from "../data/session/session_6.json" with { type: "json" };
+import { getLatestSessionData } from "./utils/session.js";
 import { MEMBERS, STUDY_CONFIG, GITHUB_CONFIG } from "./utils/constants.js";
 import {
   removeYamlFrontmatter,
@@ -19,6 +19,8 @@ export default async ({ github, context, core }) => {
     START_DATE_FIELD_ID,
     END_DATE_FIELD_ID,
   } = process.env;
+
+  const sessionData = getLatestSessionData();
 
   const { RULES, URL } = STUDY_CONFIG;
   const { PROGRAMMERS_BASE } = URL;
@@ -86,7 +88,10 @@ export default async ({ github, context, core }) => {
       (member) => `- [ ] ${member.name}`,
     ).join("\n");
 
-    const weeksToCreate = sessionData.challenges.slice(0, 10);
+    const weeksToCreate = sessionData.challenges.slice(
+      0,
+      RULES.WEEKS_PER_SESSION,
+    );
     const createdWeekGoals = [];
 
     for (const weekData of weeksToCreate) {
