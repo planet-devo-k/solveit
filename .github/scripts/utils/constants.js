@@ -28,7 +28,6 @@ export const MEMBERS = [
 
 export const STUDY_CONFIG = {
   RULES: {
-    WEEKS_PER_SESSION: 10,
     MIN_REVIEWS_REQUIRED: 2,
   },
   URL: {
@@ -43,22 +42,17 @@ export const GITHUB_CONFIG = {
     IN_PROGRESS: "47fc9ee4",
     DONE: "98236657",
   },
-  MILESTONE: {
-    PROGRAMMERS_ID: 1,
-  },
-  ISSUE: {
-    PROGRAMMERS_NUMBER: 143,
-  },
 };
 
 export const DISCORD_CONFIG = {
   ROLE: {
     MEMBER_ID: "1483764477827485747",
+    // TEAM_ID:
   },
 };
 
 export const BOT_CONFIG = {
-  TARGET_CHANNEL_ID: "1481651506372673536",
+  ALERT_CHANNEL_ID: "1481651506372673536",
   MAX_WARNINGS: 5,
   TIMEOUT: {
     MODAL_MS: 5 * 60 * 1000,

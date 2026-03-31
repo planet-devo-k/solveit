@@ -58,7 +58,7 @@ export const handleCommand = async (interaction, client) => {
       .setStyle(ButtonStyle.Danger),
   );
 
-  const targetChannel = client.channels.cache.get(BOT_CONFIG.TARGET_CHANNEL_ID);
+  const targetChannel = client.channels.cache.get(BOT_CONFIG.ALERT_CHANNEL_ID);
   const messagePayload = {
     content: `${targetMember} 버튼을 눌러 상세 내용을 확인하세요.`,
     components: [row],

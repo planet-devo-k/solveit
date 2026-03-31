@@ -42,7 +42,7 @@ export const handleKickCommand = async (interaction, client) => {
 
   await handleKickAndReset(interaction.guild, targetMember.id, typeLabel);
 
-  const adminChannel = client.channels.cache.get(BOT_CONFIG.TARGET_CHANNEL_ID);
+  const adminChannel = client.channels.cache.get(BOT_CONFIG.ALERT_CHANNEL_ID);
   if (adminChannel) {
     const embed = new EmbedBuilder()
       .setColor(BOT_CONFIG.COLORS.KICK)
