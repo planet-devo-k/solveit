@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 export const getLatestSessionData = () => {
-  const sessionDir = path.join(process.cwd(), "data/session");
+  const sessionDir = path.join(process.cwd(), ".github/data/session");
   const latestFile = fs
     .readdirSync(sessionDir)
     .filter((f) => f.startsWith("session_") && f.endsWith(".json"))
