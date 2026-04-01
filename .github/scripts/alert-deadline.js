@@ -4,7 +4,7 @@ import { getLatestSessionData } from "./utils/session.js";
 import { createDiscordTable } from "./utils/formatter.js";
 import { getThisWeekPRs } from "./utils/github.js";
 
-export default async ({ github, context, core, testWeek = null }) => {
+export default async ({ github, context, core, test }) => {
   const { RULES } = STUDY_CONFIG;
   const { MIN_REVIEWS_REQUIRED } = RULES;
 
@@ -13,13 +13,13 @@ export default async ({ github, context, core, testWeek = null }) => {
 
     let currentWeekInfo;
 
-    if (testWeek !== null) {
-      currentWeekInfo = sessionData.challenges.find((c) => c.week === testWeek);
+    if (test !== null) {
+      currentWeekInfo = sessionData.challenges.find((c) => c.week === test);
       if (!currentWeekInfo) {
-        console.warn(`테스트 주차(${testWeek})를 찾을 수 없습니다.`);
+        console.warn(`테스트 주차(${test})를 찾을 수 없습니다.`);
         return;
       }
-      console.log(`[테스트 모드] ${testWeek}주차 강제 지정`);
+      console.log(`[테스트 모드] ${test}주차 강제 지정`);
     } else {
       const nowStr = getKSTDateString(new Date());
       currentWeekInfo = sessionData.challenges.find(

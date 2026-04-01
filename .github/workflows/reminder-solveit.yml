@@ -2,8 +2,14 @@ name: Reminder Solveit
 
 on:
   schedule:
-    - cron: "0 0 * * 0" # 매주 일요일 9:00 (KST, UTC+9)
+    - cron: "0 0 * * 1" # 매주 월요일 9:00 (KST, UTC+9)
   workflow_dispatch:
+    inputs:
+      test:
+        description: "날짜 체크 건너뛰기 (테스트용)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,5 +33,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const test = '${{ inputs.test }}' === 'true';
             const { default: remind } = await import(process.env.SCRIPT_FULL_PATH);
-            await remind({ github, context, core });
+            await remind({ github, context, core, test });
