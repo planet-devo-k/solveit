@@ -6,7 +6,8 @@ import {
   createDiscussion,
   getRepositoryInfo,
   getDiscussionCategories,
-  getThisWeekPRs,
+  getThisSessionPRs,
+  parseWeeksFromTitle,
   addLabelByName,
 } from "./utils/github.js";
 
@@ -32,8 +33,6 @@ export default async ({ github, context, core, test }) => {
       `세션 ${sessionData.id} 리포트 작성 시작 (${sessionData.date.start} ~ ${sessionData.date.end})`,
     );
 
-    const sessionStart = new Date(sessionData.date.start);
-    const sessionEndDate = new Date(sessionData.date.end);
     const weeks = sessionData.challenges.map((c) => c.week);
     const firstWeek = weeks[0];
 
@@ -66,27 +65,20 @@ export default async ({ github, context, core, test }) => {
     });
 
     // ─── PR + 리뷰 집계 ───
-    const sessionPRs = await getThisWeekPRs({
+    const sessionPRs = await getThisSessionPRs({
       github,
       context,
-      startDate: sessionStart,
-      endDate: sessionEndDate,
+      weeks: sessionData.weeks,
     });
     console.log(`세션 기간 내 PR 개수 = ${sessionPRs.length}`);
 
     await Promise.all(
       sessionPRs.map(async (pr) => {
         const author = pr.user.login;
-        const createdAt = new Date(pr.created_at);
-        const weekInfo = sessionData.challenges.find((c) => {
-          const start = new Date(c.date.start);
-          const end = new Date(c.date.end);
-          return createdAt >= start && createdAt <= end;
-        });
+        const prWeeks = parseWeeksFromTitle(pr.title);
+        if (prWeeks.length === 0 || !reportData[author]) return;
+        const weekNum = Math.max(...prWeeks);
 
-        if (!weekInfo || !reportData[author]) return;
-
-        const weekNum = weekInfo.week;
         reportData[author].weeks[weekNum].pr = true;
         reportData[author].weeks[weekNum].prUrl = pr.html_url;
         reportData[author].totalPRs++;

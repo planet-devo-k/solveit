@@ -43,8 +43,7 @@ export default async ({ github, context, core }) => {
     const thisWeekPRs = await getThisWeekPRs({
       github,
       context,
-      startDate: new Date(currentWeekInfo.date.start),
-      endDate: new Date(currentWeekInfo.date.end),
+      currentWeek: currentWeekInfo.week,
     });
 
     const reviewCounts = {};
