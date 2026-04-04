@@ -1,7 +1,7 @@
-import sessionData from "../data/session/session_6.json" with { type: "json" };
 import { MEMBERS, STUDY_CONFIG } from "./utils/constants.js";
 import { getKSTDateString } from "./utils/date.js";
-import { createDiscordTable, createMarkdownTable } from "./utils/formatter.js";
+import { getLatestSessionData } from "./utils/session.js";
+import { createMarkdownTable } from "./utils/formatter.js";
 import {
   getThisWeekPRs,
   getDiscussionCategories,
@@ -10,43 +10,54 @@ import {
   getRepositoryInfo,
 } from "./utils/github.js";
 
-export default async ({ github, context, core }) => {
+export default async ({ github, context, core, test }) => {
   const { RULES } = STUDY_CONFIG;
   const { MIN_REVIEWS_REQUIRED } = RULES;
 
   try {
-    const nowStr = getKSTDateString(new Date());
-    const currentWeekInfo = sessionData.challenges.find(
-      (c) => nowStr >= c.date.start && nowStr <= c.date.end,
-    );
+    const sessionData = getLatestSessionData();
 
-    if (!currentWeekInfo) {
-      console.warn(`(${nowStr})는 현재 스터디 진행 기간이 아닙니다.`);
-      return;
+    let currentWeekInfo;
+
+    if (test !== null) {
+      currentWeekInfo = sessionData.challenges.find((c) => c.week === test);
+      if (!currentWeekInfo) {
+        console.warn(`테스트 주차(${test})를 찾을 수 없습니다.`);
+        return;
+      }
+      console.log(`[테스트 모드] ${test}주차 강제 지정`);
+    } else {
+      const nowStr = getKSTDateString(new Date());
+      currentWeekInfo = sessionData.challenges.find(
+        (c) => nowStr >= c.date.start && nowStr <= c.date.end,
+      );
+      if (!currentWeekInfo) {
+        console.warn(
+          `(${getKSTDateString(new Date())})는 현재 스터디 진행 기간이 아닙니다.`,
+        );
+        return;
+      }
     }
 
-    const currentAbsentees = currentWeekInfo.absentees;
+    console.log(`${currentWeekInfo.week}주차 모니터링 시작`);
+
     const thisMonday = new Date(currentWeekInfo.date.start);
     const thisSunday = new Date(currentWeekInfo.date.end);
-    const prDeadline = new Date(thisSunday.getTime());
     const reviewDeadline = new Date(thisSunday.getTime() + 20 * 60 * 60 * 1000);
-
-    console.log(`${currentWeekInfo.week}주차 모니터링 시작`);
 
     const thisWeekPRs = await getThisWeekPRs({
       github,
       context,
-      startDate: thisMonday,
-      endDate: prDeadline,
+      currentWeek: currentWeekInfo.week,
     });
     console.log(`이번주 PR 개수 = ${thisWeekPRs.length}`);
 
+    // ─── 멤버 상태 초기화 ───
     const memberStatus = {};
     MEMBERS.forEach((member) => {
       memberStatus[member.githubId] = {
         name: member.name,
         githubId: member.githubId,
-        discordId: member.discordId,
         submitted: false,
         prUrl: "",
         reviewPrCount: 0,
@@ -54,6 +65,7 @@ export default async ({ github, context, core }) => {
       };
     });
 
+    // ─── PR 제출 + 리뷰 집계 ───
     await Promise.all(
       thisWeekPRs.map(async (pr) => {
         const author = pr.user.login;
@@ -88,6 +100,7 @@ export default async ({ github, context, core }) => {
       }),
     );
 
+    // ─── 리뷰 쿼터 체크 ───
     const memberIds = MEMBERS.map((m) => m.githubId);
     memberIds.forEach((id) => {
       const status = memberStatus[id];
@@ -96,52 +109,36 @@ export default async ({ github, context, core }) => {
       }
     });
 
-    const getTableConfig = (includeAttendance = false) => {
-      const headers = ["이름", "PR 제출", "리뷰"];
-      const paddings = [6, 9, 6];
-
-      if (includeAttendance) {
-        headers.push("출석");
-        paddings.push(6);
-      }
-
-      return {
-        headers,
-        paddings,
-        renderRow: (id) => {
-          const s = memberStatus[id];
-          const prStatus = s.submitted ? "✅" : "❌";
-          const reviewStatus = `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`;
-
-          const rowData = { name: s.name || id, prStatus, reviewStatus };
-
-          if (includeAttendance) {
-            const isPresent = !currentAbsentees.includes(id);
-            rowData.attendance = isPresent ? "✅" : "❌";
-          }
-
-          return rowData;
-        },
-      };
+    // ─── 테이블 구성 ───
+    const tableConfig = {
+      headers: ["이름", "PR 제출", "리뷰(PR 기준)", "출석"],
+      paddings: [6, 9, 6, 6],
+      renderRow: (id) => {
+        const s = memberStatus[id];
+        return {
+          name: s.name || id,
+          prStatus: s.submitted ? `✅ [PR](${s.prUrl})` : "❌",
+          reviewStatus: `${s.reviewPrCount}/${MIN_REVIEWS_REQUIRED}`,
+          attendance: "✅",
+        };
+      },
     };
 
-    const incompleteMembers = Object.values(memberStatus).filter(
-      (m) => !(m.submitted && m.hasMetReviewQuota),
-    );
-
-    const discordIncompleteAlertTable =
-      incompleteMembers.length > 0
-        ? createDiscordTable(
-            incompleteMembers.map((m) => m.githubId),
-            getTableConfig(false),
-          )
-        : null;
-
+    // ─── 주간 리포트 생성 ───
     console.log("이번주 리포트 생성 중...");
-    const allTable = createMarkdownTable(memberIds, getTableConfig(true));
+    const allTable = createMarkdownTable(memberIds, tableConfig);
     const reportTitle = `\`Week${currentWeekInfo.week}\` 주간 활동 리포트`;
-    const reportBody = `## THIS WEEK REPORT\n\n${allTable}\n\n집계 시각: ${getKSTDateString(new Date())} 20:00 (KST)`;
+    const reportBody = [
+      `## THIS WEEK REPORT`,
+      ``,
+      `**${currentWeekInfo.date.start} ~ ${currentWeekInfo.date.end}**`,
+      ``,
+      allTable,
+      ``,
+      `> 집계 시각: ${getKSTDateString(new Date())} 20:00 (KST)`,
+    ].join("\n");
 
+    // ─── GitHub Discussion 생성 ───
     const repository = await getRepositoryInfo({ github, context });
     const categories = await getDiscussionCategories({ github, context });
     const categoryReport = categories.find((cat) =>
@@ -176,9 +173,7 @@ export default async ({ github, context, core }) => {
     console.log("주간 모니터링 보고 완료");
 
     return {
-      incompleteTable: discordIncompleteAlertTable,
       reportData: thisWeekReportResult,
-      incompleteMembers: incompleteMembers,
     };
   } catch (error) {
     console.error("모니터링 프로세스 중 에러 발생:", error.message);

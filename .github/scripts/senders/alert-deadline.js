@@ -13,7 +13,7 @@ export default async ({ github, context, core, data = {} }) => {
     const mention = incompleteMembers.map((m) => `<@${m.discordId}>`).join(" ");
 
     const discordPayload = {
-      content: `마감 1시간 전! 아직 PR, 리뷰 안 하신 분들 체크해주세요.\n${mention}`,
+      content: `마감 1시간 전! 체크해보세요. ${mention}`,
       allowed_mentions: {
         parse: ["everyone", "users"],
       },

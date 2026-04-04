@@ -1,19 +1,25 @@
 {
   "id": 6,
   "levels": [0, 1],
+  "milestone_id": 1,
+  "parent_issue_number": 143,
+  "duration": 10,
   "weeks": [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
   "date": {
     "start": "2026-03-15",
     "end": "2026-05-29"
   },
+  "absentees": [
+    { "name": "홍길동", "status": "absent", "type": "medical" },
+    { "name": "김철수", "status": "late", "type": "authorized" }
+  ],
   "challenges": [
     {
       "week": 50,
       "date": {
-        "start": "2026-03-15",
+        "start": "2026-04-02",
         "end": "2026-04-19"
       },
-      "absentees": [],
       "list": [
         {
           "name": "두 수의 합",
@@ -35,7 +41,6 @@
         "start": "2026-04-20",
         "end": "2026-04-26"
       },
-      "absentees": [],
       "list": [
         {
           "name": "문제A",
@@ -57,7 +62,6 @@
         "start": "2026-04-20",
         "end": "2026-04-26"
       },
-      "absentees": [],
       "list": [
         {
           "name": "문제A",

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import sessionData from "../data/session/session_6.json" with { type: "json" };
+import { getLatestSessionData } from "./utils/session.js";
 import { MEMBERS, STUDY_CONFIG, GITHUB_CONFIG } from "./utils/constants.js";
 import {
   removeYamlFrontmatter,
@@ -20,9 +20,11 @@ export default async ({ github, context, core }) => {
     END_DATE_FIELD_ID,
   } = process.env;
 
-  const { RULES, URL } = STUDY_CONFIG;
+  const sessionData = getLatestSessionData();
+
+  const { URL } = STUDY_CONFIG;
   const { PROGRAMMERS_BASE } = URL;
-  const { PROJECT_FIELD_STATUS, MILESTONE, ISSUE } = GITHUB_CONFIG;
+  const { PROJECT_FIELD_STATUS } = GITHUB_CONFIG;
 
   const ASSIGNEE_ID = "sgoldenbird";
   const SESSION_ID = sessionData.id;
@@ -64,7 +66,7 @@ export default async ({ github, context, core }) => {
     const sessionBody = replacePlaceholders(
       removeYamlFrontmatter(sessionTemplate),
       {
-        duration: RULES.WEEKS_PER_SESSION,
+        duration: sessionData.duration,
         start_date: sessionData.date.start,
         end_date: sessionData.date.end,
         levels: sessionData.levels.join(" and "),
@@ -79,14 +81,14 @@ export default async ({ github, context, core }) => {
       body: sessionBody,
       assignees: [ASSIGNEE_ID],
       labels: ["goal", "programmers", "session", ...levelLabels],
-      milestone: Number(MILESTONE.PROGRAMMERS_ID),
+      milestone: Number(sessionData.milestone_id),
     });
 
     const membersWeeklyChecklist = MEMBERS.map(
       (member) => `- [ ] ${member.name}`,
     ).join("\n");
 
-    const weeksToCreate = sessionData.challenges.slice(0, 10);
+    const weeksToCreate = sessionData.challenges.slice(0, sessionData.duration);
     const createdWeekGoals = [];
 
     for (const weekData of weeksToCreate) {
@@ -151,17 +153,21 @@ export default async ({ github, context, core }) => {
       console.log(`Week Goal 프로젝트 연동 완료: #${goal.number}`);
     }
 
-    const { data: programmersParent } = await github.rest.issues.get({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: ISSUE.PROGRAMMERS_NUMBER,
-    });
+    // ── Sub-issue 연결 ──
+    if (sessionData.parent_issue_number) {
+      const { data: parentIssue } = await github.rest.issues.get({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: sessionData.parent_issue_number,
+      });
 
-    await linkSubIssue({
-      github,
-      parentNodeId: programmersParent.node_id,
-      subIssueId: thisSessionGoal.node_id,
-    });
+      await linkSubIssue({
+        github,
+        parentNodeId: parentIssue.node_id,
+        subIssueId: thisSessionGoal.node_id,
+      });
+      console.log("Session → Parent Issue 연결 완료");
+    }
 
     for (const { data, goal } of createdWeekGoals) {
       await linkSubIssue({
@@ -170,6 +176,7 @@ export default async ({ github, context, core }) => {
         subIssueId: goal.node_id,
       });
     }
+    console.log("Week → Session 연결 완료");
 
     console.log("모든 작업이 완료되었습니다.");
   } catch (error) {

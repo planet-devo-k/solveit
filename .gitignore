@@ -1,12 +1,21 @@
-# .vscode/
+# IDE
 .vscode/
-
-# Node.js dependencies
+ 
+# Dependencies
 node_modules/
+
+# Build
+dist/
+ 
+# OS
 .DS_Store
-
-# Environment variables
+ 
+# Environment
 .env
-
-back.yml
+ 
+# Logs
+npm-debug.log
+logs/
+ 
+# Local 
 local/

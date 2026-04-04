@@ -1,5 +1,5 @@
 ---
-name: "goal track"
+name: "Goal Track"
 about: "Use this template for using issues as goal tracking items."
 duration: "10 weeks"
 title: "`Session: Week ~ Week` Programmers level0 / level1"
@@ -15,9 +15,7 @@ labels:
 # Goal
 
 **Duration**: {{duration}} weeks {{start_date}} ~ {{end_date}}
-
 **Description**: Solve 3 coding challenges from Programmers Level {{levels}} every week.
-
 **Deadline**: {{end_date}} SUN
 
 ## This Session Challenges
