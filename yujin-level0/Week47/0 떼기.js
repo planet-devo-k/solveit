@@ -1,5 +1,5 @@
 function solution(n_str) {
-  let str = "";
+  let result = [];
   let foundFirstNonZero = false;
 
   for (let i = 0; i < n_str.length; i++) {
@@ -11,11 +11,11 @@ function solution(n_str) {
 
     // 0이 아닌 숫자 처음 발견 이후 모든 문자 담기
     if (foundFirstNonZero) {
-      str += n_str[i];
+      result.push(n_str[i]);
     }
   }
 
-  return str;
+  return result.join("");
 }
 
 // 다른 풀이
