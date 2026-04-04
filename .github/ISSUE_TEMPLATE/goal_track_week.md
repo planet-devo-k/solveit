@@ -1,5 +1,5 @@
 ---
-name: "goal track week"
+name: "Goal Track Week"
 about: "Use this template for using issues as weekly goal tracking items."
 title: "`Week`"
 assignees: "sgoldenbird"
@@ -12,10 +12,8 @@ labels:
 
 # Goal
 
-**Week**: {{start_date}} ~ {{end_date}}
-
+**Period**: {{start_date}} ~ {{end_date}}
 **Description**: Solve 3 coding challenges from Programmers Level {{levels}}.
-
 **Deadline**: {{end_date}}
 
 ## This Week Challenges
