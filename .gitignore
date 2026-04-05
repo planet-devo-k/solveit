@@ -1,8 +1,21 @@
-# .vscode/
+# IDE
 .vscode/
-
-# Node.js dependencies
+ 
+# Dependencies
 node_modules/
 
-# Environment variables
+# Build
+dist/
+ 
+# OS
+.DS_Store
+ 
+# Environment
 .env
+ 
+# Logs
+npm-debug.log
+logs/
+ 
+# Local 
+local/
