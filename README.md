@@ -5,7 +5,7 @@
 -->
 
 <p align="right">
-  <a href="https://discord.gg/8vn2pZ6p">
+  <a href="https://discord.gg/ucQ3P6ZdjN">
     <img src="https://img.shields.io/discord/1374753887902498929?color=7289DA&label=Join%20Community&logo=discord&logoColor=white&style=for-the-badge" alt="Discord Join">
   </a>
 </p>
@@ -81,7 +81,6 @@ solveit은 함께 코딩 테스트 문제를 풀고, 리뷰와 피드백을 통�
 
 <p align="right">
   <sub><b>Original Resources</b>: Copyright © Original Author. All rights reserved.</sub>
-  <sub><b>Infrastructure & Systems</b>: © 2026 sgoldenbird. All rights reserved.</sub>
-  <sub><b>Participant Works</b>: Copyright © 2026 planet-devo-k. All rights reserved.</sub>
-  <!-- <sub>Copyright © 2026 sgoldenbird. All rights reserved.</sub> -->
+  <br/><sub><b>Infrastructure & Systems</b>: © 2026 sgoldenbird. All rights reserved.</sub>
+  <br/><sub><b>Participant Works</b>: Copyright © 2026 planet-devo-k. All rights reserved.</sub>
 </p>
