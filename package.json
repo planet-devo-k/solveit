@@ -2,9 +2,5 @@
   "name": "solveit",
   "version": "1.0.0",
   "type": "module",
-  "description": "coding challenge study repository",
-  "dependencies": {
-    "discord.js": "^14.26.3",
-    "dotenv": "^17.4.2"
-  }
+  "description": "coding challenge study repository"
 }
