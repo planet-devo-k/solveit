@@ -1,12 +1,17 @@
 function solution(binomial) {
-  let arr = binomial.split(" ");
+  let [a, op, b] = binomial.split(" ");
   let result = 0;
-  if (arr[1] === "+") {
-    result = arr[0] + arr[2];
-  } else if (arr[1] === "-") {
-    result = arr[0] - arr[2];
-  } else {
-    result = arr[0] * arr[2];
+
+  const num1 = Number(a);
+  const num2 = Number(b);
+
+  switch (op) {
+    case "+":
+      return num1 + num2;
+    case "-":
+      return num1 - num2;
+    case "*":
+      return num1 * num2;
   }
 
   return result;
