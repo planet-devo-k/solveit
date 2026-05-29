@@ -8,3 +8,10 @@ function solution(n) {
 
   return parseInt(str, 3);
 }
+
+// 다른 풀이
+// function solution(n) {
+//     const reversedBase3 = n.toString(3).split('').reverse().join('');
+
+//     return parseInt(reversedBase3, 3);
+// }
