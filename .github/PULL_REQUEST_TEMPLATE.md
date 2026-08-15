@@ -1,39 +1,25 @@
-### Source Link
-
-[Programmers](https://school.programmers.co.kr/learn/challenges?order=recent&levels=0&languages=javascript&page=1)
-
-### Progress
-
-Check off the problems you solved this week.
+## Progress
 
 - [x] 문자열 출력하기
 - [x]
 - [x]
 
-### Related Issues
+## Related Issues & Questions
 
 <!--
-- [관련 이슈 번호, e.g., question #123]
+- 1. 관련 디스커션/이슈가 있다면 해당 이슈 번호를 함께 적어주세요.
+- 2. 질문의 경우 이곳에 작성하거나 디스커션 Q&A 이슈 번호를 적고, question 라벨을 추가합니다.
+- [e.g. #123]
 - 없으면 none
 -->
 
 - none
 
-### Checklist before creating a PR
+## Checklist
 
-- [ ] 제목이 `week1` 형식을 따르고 있나요?
-- [ ] 본인을 Assignee로 지정했나요?
-- [ ] 관련 라벨(source, difficulty, category 등)을 모두 추가했나요?
-- [ ] Projects에 연결하지 **마세요**.
-- [ ] Milestone에 연결하지 **마세요**.
-- [ ] Development의 해당 week(issue)에 연결했나요?
-
-<!-- 영어
-- [ ] Is the PR title following the `week1` format?
-- [ ] Have you assigned yourself as the Assignee?
-- [ ] Have all relevant labels (source, difficulty, category, etc.) been added?
-- [ ] Do **NOT** link the PR to Projects.
-- [ ] Do **NOT** link the PR to a Milestone.
-- [ ] Is the appropriate week linked as a Milestone?
-- [ ] Is the appropriate week linked under Development?
--->
+- [x] PR 제목을 `Week1` 형식에 맞춰 작성했습니다.
+- [ ] 본인을 Assignee로 지정했습니다.
+- [ ] Reviewers를 직접 지정하지 **마세요.** 커스텀 로직으로 자동 배정됩니다.
+- [ ] 관련 라벨(source, difficulty, DA, Techniques/Algorithms 등)을 모두 추가했습니다.
+- [ ] Projects와 Milestone에는 연결하지 **마세요**.
+- [ ] Development 항목에 해당 주차 이슈(goal)를 연결하고 Status에 체크했습니다.
