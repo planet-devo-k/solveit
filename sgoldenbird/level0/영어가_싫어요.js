@@ -1,5 +1,5 @@
 function solution(numbers) {
-  const numWords = [
+  const words = [
     "zero",
     "one",
     "two",
@@ -12,9 +12,7 @@ function solution(numbers) {
     "nine",
   ];
 
-  numWords.forEach((word, index) => {
-    numbers = numbers.replaceAll(word, index);
-  });
-
-  return Number(numbers);
+  return Number(
+    words.reduce((str, word, i) => str.replaceAll(word, i), numbers),
+  );
 }
