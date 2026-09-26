@@ -48,7 +48,7 @@ function solution(N, stages) {
     total -= count;
   }
 
-  // 4. 실패율(b[1]) 기준 내림차순 정렬 후 스테이지 번호(a[0])만 추출
+  // 실패율(b[1]) 기준 내림차순 정렬 후 스테이지 번호(a[0])만 추출
   result.sort((a, b) => b[1] - a[1]);
   return result.map((item) => item[0]);
 }
